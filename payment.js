@@ -4,7 +4,7 @@
 class PaymentManager {
     constructor() {
         this.STRIPE_PUBLIC_KEY = 'pk_test_...'; // À remplacer par votre clé publique Stripe
-        this.BACKEND_URL = 'https://your-backend.com/api'; // URL de votre backend
+        this.BACKEND_URL = 'https://TON-URL-RAILWAY.up.railway.app/api'; // Remplace par ton URL Railway
         this.stripe = null;
 
         this.PRICES = {
