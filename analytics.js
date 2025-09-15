@@ -346,7 +346,7 @@ class WelcomeStrategy {
             <div class="tooltip-content">
                 <h3>🎉 Bienvenue dans Perfect Insta Post !</h3>
                 <p>Uploadez une photo pour commencer à créer des posts parfaits</p>
-                <button onclick="this.parentElement.parentElement.remove()">Compris !</button>
+                <button id="welcomeOkBtn">Compris !</button>
             </div>
             <style>
                 .welcome-tooltip {
@@ -377,6 +377,14 @@ class WelcomeStrategy {
         `;
 
         document.body.appendChild(tooltip);
+
+        // Ajouter event listener
+        setTimeout(() => {
+            const okBtn = tooltip.querySelector('#welcomeOkBtn');
+            if (okBtn) {
+                okBtn.addEventListener('click', () => tooltip.remove());
+            }
+        }, 0);
 
         // Auto-remove après 10 secondes
         setTimeout(() => {
@@ -412,10 +420,10 @@ class UpgradeStrategy {
         hint.innerHTML = `
             <div class="hint-content">
                 💡 <strong>Astuce Pro</strong> : Débloquez la localisation et le contexte pour des posts encore plus engageants !
-                <button onclick="freemiumManager.showUpgradeModal(); this.parentElement.parentElement.remove();">
+                <button id="seeProBtn">
                     Voir Pro
                 </button>
-                <button onclick="this.parentElement.parentElement.remove()">×</button>
+                <button id="closeHintBtn">×</button>
             </div>
             <style>
                 .upgrade-hint {
@@ -463,6 +471,23 @@ class UpgradeStrategy {
 
         document.body.appendChild(hint);
 
+        // Ajouter event listeners
+        setTimeout(() => {
+            const seeProBtn = hint.querySelector('#seeProBtn');
+            const closeBtn = hint.querySelector('#closeHintBtn');
+
+            if (seeProBtn) {
+                seeProBtn.addEventListener('click', () => {
+                    freemiumManager.showUpgradeModal();
+                    hint.remove();
+                });
+            }
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => hint.remove());
+            }
+        }, 0);
+
         // Auto-remove après 15 secondes
         setTimeout(() => {
             if (hint.parentElement) {
@@ -492,7 +517,7 @@ class WinbackStrategy {
                 <div class="message-content">
                     <h3>👋 Content de vous revoir !</h3>
                     <p>Créez un nouveau post parfait dès maintenant</p>
-                    <button onclick="this.parentElement.parentElement.remove()">Let's go !</button>
+                    <button id="letsGoBtn">Let's go !</button>
                 </div>
                 <style>
                     .winback-message {
@@ -538,6 +563,14 @@ class WinbackStrategy {
             `;
 
             document.body.appendChild(message);
+
+            // Ajouter event listener
+            setTimeout(() => {
+                const letsGoBtn = message.querySelector('#letsGoBtn');
+                if (letsGoBtn) {
+                    letsGoBtn.addEventListener('click', () => message.remove());
+                }
+            }, 0);
 
             setTimeout(() => {
                 if (message.parentElement) {

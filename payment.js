@@ -260,7 +260,7 @@ class PaymentManager {
                     <li>✅ Fonctionnalités avancées</li>
                     <li>✅ Sans watermark</li>
                 </ul>
-                <button onclick="this.parentElement.parentElement.remove()">
+                <button id="startUsingProBtn">
                     Commencer à utiliser Pro
                 </button>
             </div>
@@ -313,6 +313,14 @@ class PaymentManager {
                 }
             </style>
         `;
+
+        // Ajouter l'event listener pour le bouton
+        setTimeout(() => {
+            const startBtn = modal.querySelector('#startUsingProBtn');
+            if (startBtn) {
+                startBtn.addEventListener('click', () => modal.remove());
+            }
+        }, 0);
 
         return modal;
     }

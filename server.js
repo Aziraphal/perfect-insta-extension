@@ -205,15 +205,19 @@ app.post('/api/analytics/batch', (req, res) => {
 });
 
 // Démarrage serveur
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8090;
 
 console.log('🔍 Starting server...');
 console.log('🌍 Environment variables:');
-console.log('PORT:', process.env.PORT);
+console.log('PORT:', process.env.PORT || 'using default 8090');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('STRIPE_SECRET_KEY present:', !!process.env.STRIPE_SECRET_KEY);
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', (err) => {
+    if (err) {
+        console.error('❌ Failed to start server:', err);
+        process.exit(1);
+    }
     console.log(`🚀 Perfect Insta Backend running on port ${PORT}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`💳 Stripe configured: ${!!process.env.STRIPE_SECRET_KEY}`);
