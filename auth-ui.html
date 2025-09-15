@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfect Insta Post - Connexion</title>
+    <link rel="stylesheet" href="popup.css">
+    <style>
+        .auth-container {
+            max-width: 350px;
+            padding: 20px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .auth-tab.active {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: var(--primary-color);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 15px;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .auth-form input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(228, 64, 95, 0.1);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-error {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .auth-success {
+            background: #efe;
+            color: #393;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        .benefits {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .benefits h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .benefits ul {
+            list-style: none;
+            padding: 0;
+            font-size: 13px;
+        }
+
+        .benefits li {
+            padding: 5px 0;
+            color: #666;
+        }
+
+        .benefits li:before {
+            content: "✨";
+            margin-right: 8px;
+        }
+
+        .skip-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .skip-link a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .skip-link a:hover {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="header">
+            <h1>📸 Perfect Insta Post</h1>
+            <p class="subtitle">Créez des posts Instagram parfaits avec l'IA</p>
+        </div>
+
+        <div class="benefits">
+            <h4>🚀 Pourquoi créer un compte ?</h4>
+            <ul>
+                <li>5 posts gratuits par mois</li>
+                <li>Sauvegarde de vos posts</li>
+                <li>Statistiques d'utilisation</li>
+                <li>Nouvelles fonctionnalités en premier</li>
+            </ul>
+        </div>
+
+        <div class="auth-tabs">
+            <button class="auth-tab active" data-tab="login">Connexion</button>
+            <button class="auth-tab" data-tab="register">Inscription</button>
+        </div>
+
+        <div class="auth-error" id="authError"></div>
+
+        <!-- Formulaire de connexion -->
+        <form class="auth-form active" id="loginForm">
+            <div class="form-group">
+                <input type="email" id="loginEmail" placeholder="Votre email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+            </div>
+            <button type="submit" class="auth-btn" id="loginBtn">
+                Se connecter
+            </button>
+        </form>
+
+        <!-- Formulaire d'inscription -->
+        <form class="auth-form" id="registerForm">
+            <div class="form-group">
+                <input type="email" id="registerEmail" placeholder="Votre email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="registerPassword" placeholder="Mot de passe (6 caractères min)" required minlength="6">
+            </div>
+            <div class="form-group">
+                <input type="password" id="confirmPassword" placeholder="Confirmez le mot de passe" required>
+            </div>
+            <button type="submit" class="auth-btn" id="registerBtn">
+                Créer mon compte
+            </button>
+        </form>
+
+        <div class="skip-link">
+            <a href="#" id="skipAuth">Continuer sans compte (fonctionnalités limitées)</a>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="auth-ui.js"></script>
+</body>
+</html>

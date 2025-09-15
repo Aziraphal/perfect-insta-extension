@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfect Insta Post</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📸 Perfect Insta Post</h1>
+            <p class="subtitle">Générez le post Instagram parfait avec l'IA</p>
+
+            <!-- Barre utilisateur -->
+            <div class="user-bar" id="userBar" hidden>
+                <div class="user-info">
+                    <span class="user-email" id="userEmail"></span>
+                    <span class="user-plan" id="userPlan">Free</span>
+                </div>
+                <div class="usage-info">
+                    <span class="usage-text" id="usageText">0/5 posts ce mois</span>
+                    <button class="upgrade-btn" id="upgradeBtn" hidden>Upgrade Pro</button>
+                </div>
+                <button class="logout-btn" id="logoutBtn">⚙️</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Section Upload d'image -->
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-placeholder">
+                    <svg width="48" height="48" fill="#ccc" viewBox="0 0 24 24">
+                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                    </svg>
+                    <p>Cliquez ou glissez votre image ici</p>
+                    <small>JPG, PNG, WebP - Max 10MB</small>
+                </div>
+                <input type="file" id="imageInput" accept="image/*" hidden>
+                <img id="previewImage" class="image-preview" hidden>
+            </div>
+
+            <!-- Section Configuration -->
+            <section class="config-section" id="configSection" hidden>
+                <h3>⚙️ Configuration</h3>
+                <div class="form-group">
+                    <label for="postType">Type de post :</label>
+                    <select id="postType">
+                        <option value="lifestyle">Lifestyle</option>
+                        <option value="food">Nourriture</option>
+                        <option value="travel">Voyage</option>
+                        <option value="fashion">Mode</option>
+                        <option value="business">Business</option>
+                        <option value="nature">Nature</option>
+                        <option value="art">Art</option>
+                        <option value="auto">Auto-détection</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="tone">Ton du message :</label>
+                    <select id="tone">
+                        <option value="casual">Décontracté</option>
+                        <option value="professional">Professionnel</option>
+                        <option value="funny">Humoristique</option>
+                        <option value="inspirational">Inspirant</option>
+                        <option value="educational">Éducatif</option>
+                    </select>
+                </div>
+
+                <!-- Options avancées -->
+                <div class="advanced-section" id="advancedSection">
+                    <h4 class="collapsible-header" id="advancedHeader">
+                        <span>✨ Options avancées</span>
+                        <span class="pro-badge" id="proOnlyBadge" hidden>PRO</span>
+                        <span class="collapse-icon">▼</span>
+                    </h4>
+                    <div class="collapsible-content" id="advancedContent">
+
+                    <div class="form-group">
+                        <label for="location">📍 Lieu/Localisation :</label>
+                        <input type="text" id="location" placeholder="ex: Lac d'Annecy, Paris, chez moi...">
+                        <small>Ajoute des hashtags géolocalisés et du contexte</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="context">🎯 Contexte/Situation :</label>
+                        <input type="text" id="context" placeholder="ex: Weekend en famille, soirée entre amis...">
+                        <small>Personnalise l'angle et l'émotion du post</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="captionLength">📏 Longueur de légende :</label>
+                        <select id="captionLength">
+                            <option value="medium">Moyenne (100-150 mots)</option>
+                            <option value="short">Courte (50-80 mots)</option>
+                            <option value="long">Longue (150-250 mots)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="captionStyle">🎨 Style de légende :</label>
+                        <select id="captionStyle">
+                            <option value="engaging">Engageant (questions)</option>
+                            <option value="storytelling">Storytelling (histoire)</option>
+                            <option value="informative">Informatif (facts)</option>
+                            <option value="motivational">Motivant (citation)</option>
+                            <option value="personal">Personnel (ressenti)</option>
+                        </select>
+                    </div>
+
+                    <!-- Overlay pro-only pour utilisateurs gratuits -->
+                    <div class="pro-overlay" id="proOverlay" hidden>
+                        <div class="pro-message">
+                            <h3>🚀 Fonctionnalités Pro</h3>
+                            <p>Débloquez les options avancées :</p>
+                            <ul>
+                                <li>📍 Localisation personnalisée</li>
+                                <li>🎯 Contexte et situation</li>
+                                <li>📏 Contrôle de la longueur</li>
+                                <li>🎨 Styles variés</li>
+                                <li>⚡ 50 posts par mois</li>
+                            </ul>
+                            <button class="upgrade-btn-big" id="upgradeFromOverlay">
+                                Passer à Pro - 19€/mois
+                            </button>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                <button id="generateBtn" class="generate-btn">
+                    <span class="btn-text">✨ Générer le post</span>
+                    <span class="loader" hidden></span>
+                </button>
+            </section>
+
+            <!-- Section Résultats -->
+            <section class="results-section" id="resultsSection" hidden>
+                <h3>🎯 Votre post parfait</h3>
+                <div class="result-card">
+                    <h4>Légende :</h4>
+                    <textarea id="generatedCaption" class="caption-textarea" rows="6"></textarea>
+                </div>
+                <div class="result-card">
+                    <h4>Hashtags :</h4>
+                    <div id="hashtagsContainer" class="hashtags-container"></div>
+                </div>
+                <div class="result-card">
+                    <h4>Suggestions d'amélioration :</h4>
+                    <ul id="suggestionsList" class="suggestions-list"></ul>
+                </div>
+                <div class="action-buttons">
+                    <button id="copyBtn" class="copy-btn">📋 Copier tout</button>
+                    <button id="newPostBtn" class="new-post-btn">🔄 Nouveau post</button>
+                </div>
+            </section>
+
+            <!-- Section API Keys (première utilisation) -->
+            <section class="api-keys-section" id="apiKeysSection" hidden>
+                <h3>🔑 Configuration des clés API</h3>
+                <p class="api-info">Pour utiliser Perfect Insta Post, vous devez configurer vos clés API :</p>
+
+                <div class="form-group">
+                    <label for="openaiKey">Clé OpenAI :</label>
+                    <input type="password" id="openaiKey" placeholder="sk-...">
+                    <small>Obtenez votre clé sur <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI</a></small>
+                </div>
+
+                <div class="form-group">
+                    <label for="googleVisionKey">Clé Google Vision API :</label>
+                    <input type="password" id="googleVisionKey" placeholder="AIza...">
+                    <small>Obtenez votre clé sur <a href="https://console.cloud.google.com/" target="_blank">Google Cloud</a></small>
+                </div>
+
+                <button id="saveApiKeys" class="save-btn">💾 Sauvegarder</button>
+            </section>
+        </div>
+    </div>
+
+    <script src="freemium.js"></script>
+    <script src="payment.js"></script>
+    <script src="analytics.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>
