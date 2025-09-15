@@ -3,25 +3,20 @@
 
 class PaymentManager {
     constructor() {
-        this.STRIPE_PUBLIC_KEY = 'pk_test_...'; // À remplacer par votre clé publique Stripe
-        this.BACKEND_URL = 'https://TON-URL-RAILWAY.up.railway.app/api'; // Remplace par ton URL Railway
+        this.STRIPE_PUBLIC_KEY = 'pk_live_51RmKrBFRRcxMaxXVE3oGKHhRq5Zkkrr4RCNu0Fpc4rgRRqdRYwVKIqXZX8N0KnDoslD88U4EEt8DrDgyR69om0Jm003ZWnqwl2'; // Remplace par ta vraie clé publique
+        this.BACKEND_URL = 'https://perfect-insta-extension-production.up.railway.app/api';
         this.stripe = null;
 
         this.PRICES = {
-            pro_monthly: 'price_1234567890', // ID du prix Stripe pour Pro mensuel
+            pro_monthly: 'price_1S7ZcNFRRcxMaxXVBcamteAe', // Price ID Live Perfect Insta Pro
         };
 
         this.init();
     }
 
     async init() {
-        // Initialiser Stripe (en production, utilisez Stripe.js CDN)
-        if (typeof Stripe !== 'undefined') {
-            this.stripe = Stripe(this.STRIPE_PUBLIC_KEY);
-            console.log('✅ Stripe initialisé');
-        } else {
-            console.warn('⚠️ Stripe.js non chargé - paiements indisponibles');
-        }
+        // Pour les Chrome Extensions, on utilise l'API direct sans Stripe.js
+        console.log('✅ Payment Manager initialisé');
     }
 
     // Créer une session de checkout Stripe
@@ -59,20 +54,14 @@ class PaymentManager {
     // Rediriger vers Stripe Checkout
     async redirectToCheckout(priceId) {
         try {
-            if (!this.stripe) {
-                throw new Error('Stripe non initialisé');
-            }
-
             // Créer la session de checkout
             const session = await this.createCheckoutSession(priceId);
 
-            // Rediriger vers Stripe Checkout
-            const result = await this.stripe.redirectToCheckout({
-                sessionId: session.id
-            });
-
-            if (result.error) {
-                throw new Error(result.error.message);
+            if (session.success && session.url) {
+                // Ouvrir Stripe Checkout dans un nouvel onglet
+                chrome.tabs.create({ url: session.url });
+            } else {
+                throw new Error('Impossible de créer la session de paiement');
             }
 
         } catch (error) {

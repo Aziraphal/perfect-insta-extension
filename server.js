@@ -28,7 +28,7 @@ const PRICES = {
 // Health check
 app.get('/', (req, res) => {
     res.json({
-        status: 'Perfect Insta Post Backend Online! 🚀',
+        status: 'Perfect Insta Post Backend Online! 🚀 v2',
         timestamp: new Date(),
         version: '1.0.0'
     });

@@ -249,9 +249,9 @@ class FreemiumManager {
         const modal = document.createElement('div');
         modal.className = 'upgrade-modal';
         modal.innerHTML = `
-            <div class="modal-backdrop" onclick="this.parentElement.remove()"></div>
+            <div class="modal-backdrop" id="modalBackdrop"></div>
             <div class="modal-content">
-                <button class="modal-close" onclick="this.parentElement.parentElement.remove()">×</button>
+                <button class="modal-close" id="modalClose">×</button>
 
                 <div class="upgrade-header">
                     <h2>🚀 Passez à Perfect Insta Pro</h2>
@@ -309,10 +309,10 @@ class FreemiumManager {
                 </div>
 
                 <div class="modal-actions">
-                    <button class="upgrade-btn-main" onclick="paymentManager.upgradeToPro()">
+                    <button class="upgrade-btn-main" id="upgradeMainBtn">
                         🚀 Passer à Pro maintenant
                     </button>
-                    <button class="maybe-later-btn" onclick="this.parentElement.parentElement.parentElement.remove()">
+                    <button class="maybe-later-btn" id="maybeLaterBtn">
                         Peut-être plus tard
                     </button>
                 </div>
@@ -501,6 +501,30 @@ class FreemiumManager {
                 }
             </style>
         `;
+
+        // Ajouter les event listeners après création
+        setTimeout(() => {
+            const upgradeBtn = modal.querySelector('#upgradeMainBtn');
+            const laterBtn = modal.querySelector('#maybeLaterBtn');
+            const closeBtn = modal.querySelector('#modalClose');
+            const backdrop = modal.querySelector('#modalBackdrop');
+
+            if (upgradeBtn) {
+                upgradeBtn.addEventListener('click', () => paymentManager.upgradeToPro());
+            }
+
+            if (laterBtn) {
+                laterBtn.addEventListener('click', () => modal.remove());
+            }
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => modal.remove());
+            }
+
+            if (backdrop) {
+                backdrop.addEventListener('click', () => modal.remove());
+            }
+        }, 0);
 
         return modal;
     }

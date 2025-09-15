@@ -5,13 +5,15 @@
   "description": "Generate perfect Instagram posts from your photos with AI-powered captions and hashtags",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "tabs"
   ],
   "host_permissions": [
     "https://vision.googleapis.com/*",
     "https://api.openai.com/*",
     "https://checkout.stripe.com/*",
-    "https://your-backend.com/*"
+    "https://js.stripe.com/*",
+    "https://perfect-insta-extension-production.up.railway.app/*"
   ],
   "action": {
     "default_popup": "popup.html",
