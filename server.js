@@ -207,6 +207,12 @@ app.post('/api/analytics/batch', (req, res) => {
 // Démarrage serveur
 const PORT = process.env.PORT || 3000;
 
+console.log('🔍 Starting server...');
+console.log('🌍 Environment variables:');
+console.log('PORT:', process.env.PORT);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('STRIPE_SECRET_KEY present:', !!process.env.STRIPE_SECRET_KEY);
+
 app.listen(PORT, () => {
     console.log(`🚀 Perfect Insta Backend running on port ${PORT}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
