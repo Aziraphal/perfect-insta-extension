@@ -213,7 +213,7 @@ console.log('PORT:', process.env.PORT);
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('STRIPE_SECRET_KEY present:', !!process.env.STRIPE_SECRET_KEY);
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Perfect Insta Backend running on port ${PORT}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`💳 Stripe configured: ${!!process.env.STRIPE_SECRET_KEY}`);
