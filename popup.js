@@ -7,7 +7,7 @@ const CONFIG = {
         googleVision: 'https://vision.googleapis.com/v1/images:annotate'
     },
     backend: {
-        baseUrl: 'http://localhost:8084',
+        baseUrl: 'https://perfect-insta-extension-production.up.railway.app',
         endpoints: {
             auth: '/auth/google',
             userMe: '/api/user/me',
