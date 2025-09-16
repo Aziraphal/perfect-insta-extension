@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadAuthenticationState();
     setupEventListeners();
     setupAuthEventListeners();
+    setupAuthMessageListeners();
     await initializeApp();
 
     // Attendre que freemiumManager soit initialisé (défini dans freemium.js)
@@ -1067,5 +1068,80 @@ function setupAuthEventListeners() {
                 showNotification('Fonctionnalité de paiement en cours de développement');
             }
         });
+    }
+}
+
+// =============================================================================
+// ÉCOUTE DES MESSAGES D'AUTHENTIFICATION AUTOMATIQUE
+// =============================================================================
+
+// Configurer l'écoute des messages d'authentification
+function setupAuthMessageListeners() {
+    // Écouter les messages PostMessage
+    window.addEventListener('message', handleAuthMessage);
+
+    // Écouter les changements localStorage (pour communication cross-tab)
+    window.addEventListener('storage', handleStorageChange);
+
+    // Vérifier s'il y a des tokens en attente dans localStorage
+    checkPendingAuthData();
+
+    console.log('🔧 Auth message listeners configurés');
+}
+
+// Gérer les messages PostMessage
+function handleAuthMessage(event) {
+    if (event.data && event.data.type === 'PERFECT_INSTA_AUTH_SUCCESS') {
+        console.log('📨 Message d\'auth reçu via PostMessage:', event.data);
+        handleAuthSuccess(event.data.token, event.data.user);
+    }
+}
+
+// Gérer les changements de localStorage
+function handleStorageChange(event) {
+    if (event.key === 'perfect_insta_auth_event') {
+        console.log('📨 Événement d\'auth détecté via localStorage');
+        checkPendingAuthData();
+    }
+}
+
+// Vérifier les données d'auth en attente
+function checkPendingAuthData() {
+    const token = localStorage.getItem('perfect_insta_auth_token');
+    const userStr = localStorage.getItem('perfect_insta_auth_user');
+
+    if (token && userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            console.log('📨 Données d\'auth trouvées dans localStorage');
+            handleAuthSuccess(token, user);
+
+            // Nettoyer localStorage après utilisation
+            localStorage.removeItem('perfect_insta_auth_token');
+            localStorage.removeItem('perfect_insta_auth_user');
+            localStorage.removeItem('perfect_insta_auth_event');
+        } catch (error) {
+            console.error('❌ Erreur parsing user data:', error);
+        }
+    }
+}
+
+// Traiter le succès d'authentification
+async function handleAuthSuccess(token, user) {
+    console.log('🎉 Authentification automatique réussie:', user.email);
+
+    try {
+        // Sauvegarder dans le stockage Chrome
+        await saveJWTToken(token, user);
+
+        // Notification de succès
+        showNotification(`Connexion réussie ! Bienvenue ${user.email}`, 'success');
+
+        // Fermer la section d'authentification et afficher l'interface utilisateur
+        updateUIForAuthenticatedUser();
+
+    } catch (error) {
+        console.error('❌ Erreur sauvegarde auth automatique:', error);
+        showNotification('Erreur lors de la sauvegarde de l\'authentification', 'error');
     }
 }

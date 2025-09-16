@@ -225,19 +225,142 @@ app.get('/auth/google/callback',
 
             console.log('✅ JWT généré pour:', req.user.email);
 
-            // Pour les tests, afficher le token directement
+            // Page avec transfert automatique vers l'extension
             res.send(`
                 <html>
-                <head><title>Perfect Insta Post - Login Success</title></head>
-                <body style="font-family: Arial; text-align: center; padding: 50px;">
-                    <h1>🎉 Connexion réussie !</h1>
-                    <p><strong>Utilisateur :</strong> ${req.user.email}</p>
-                    <p><strong>Plan :</strong> ${req.user.plan}</p>
-                    <p><strong>Posts ce mois :</strong> ${req.user.postsThisMonth}</p>
-                    <hr>
-                    <h3>JWT Token généré :</h3>
-                    <textarea style="width: 80%; height: 100px;">${token}</textarea>
-                    <p><em>Ce token sera utilisé par l'extension pour s'authentifier</em></p>
+                <head>
+                    <title>Perfect Insta Post - Login Success</title>
+                    <style>
+                        body {
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                            text-align: center;
+                            padding: 50px;
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            margin: 0;
+                            min-height: 100vh;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                        }
+                        .container {
+                            background: rgba(255,255,255,0.1);
+                            padding: 40px;
+                            border-radius: 20px;
+                            backdrop-filter: blur(10px);
+                            max-width: 500px;
+                            margin: 0 auto;
+                        }
+                        .status {
+                            margin: 20px 0;
+                            padding: 15px;
+                            border-radius: 10px;
+                            background: rgba(255,255,255,0.1);
+                        }
+                        .success { background: rgba(76, 175, 80, 0.3); }
+                        .processing { background: rgba(255, 193, 7, 0.3); }
+                        .spinner {
+                            border: 3px solid rgba(255,255,255,0.3);
+                            border-radius: 50%;
+                            border-top: 3px solid white;
+                            width: 30px;
+                            height: 30px;
+                            animation: spin 1s linear infinite;
+                            margin: 0 auto 15px auto;
+                        }
+                        @keyframes spin {
+                            0% { transform: rotate(0deg); }
+                            100% { transform: rotate(360deg); }
+                        }
+                        .token-area {
+                            background: rgba(0,0,0,0.1);
+                            padding: 15px;
+                            border-radius: 10px;
+                            margin: 20px 0;
+                            word-break: break-all;
+                            font-size: 12px;
+                            opacity: 0.7;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>🎉 Connexion réussie !</h1>
+                        <p><strong>Utilisateur :</strong> ${req.user.email}</p>
+                        <p><strong>Plan :</strong> ${req.user.plan.toUpperCase()}</p>
+                        <p><strong>Posts ce mois :</strong> ${req.user.postsThisMonth}/${req.user.plan === 'free' ? 5 : 50}</p>
+
+                        <div id="status" class="status processing">
+                            <div class="spinner"></div>
+                            <p>🔄 Transfert vers l'extension en cours...</p>
+                        </div>
+
+                        <div class="token-area">
+                            <strong>JWT Token :</strong><br>
+                            ${token}
+                        </div>
+
+                        <p><small>Cette page se fermera automatiquement dans quelques secondes</small></p>
+                    </div>
+
+                    <script>
+                        const token = "${token}";
+                        const user = {
+                            id: "${req.user.id}",
+                            email: "${req.user.email}",
+                            name: "${req.user.name || ''}",
+                            plan: "${req.user.plan}",
+                            postsThisMonth: ${req.user.postsThisMonth}
+                        };
+
+                        // Fonction pour notifier l'extension
+                        function notifyExtension() {
+                            // Méthode 1: PostMessage vers toutes les fenêtres ouvertes
+                            if (window.opener) {
+                                window.opener.postMessage({
+                                    type: 'PERFECT_INSTA_AUTH_SUCCESS',
+                                    token: token,
+                                    user: user
+                                }, '*');
+                            }
+
+                            // Méthode 2: localStorage pour communication cross-tab
+                            localStorage.setItem('perfect_insta_auth_token', token);
+                            localStorage.setItem('perfect_insta_auth_user', JSON.stringify(user));
+
+                            // Trigger storage event
+                            localStorage.setItem('perfect_insta_auth_event', Date.now().toString());
+
+                            // Méthode 3: Essayer de communiquer directement avec l'extension
+                            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                                try {
+                                    chrome.runtime.sendMessage('${process.env.EXTENSION_ID || 'unknown'}', {
+                                        type: 'AUTH_SUCCESS',
+                                        token: token,
+                                        user: user
+                                    });
+                                } catch (e) {
+                                    console.log('Direct extension communication failed:', e);
+                                }
+                            }
+
+                            // Mise à jour du statut
+                            document.getElementById('status').innerHTML = \`
+                                <div style="background: rgba(76, 175, 80, 0.3); padding: 15px; border-radius: 10px;">
+                                    ✅ Authentification transférée avec succès !<br>
+                                    <small>Vous pouvez fermer cette page et retourner à l'extension</small>
+                                </div>
+                            \`;
+
+                            // Auto-fermeture après 3 secondes
+                            setTimeout(() => {
+                                window.close();
+                            }, 3000);
+                        }
+
+                        // Exécuter le transfert
+                        setTimeout(notifyExtension, 1000);
+                    </script>
                 </body>
                 </html>
             `);
