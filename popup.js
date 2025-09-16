@@ -66,27 +66,10 @@ const elements = {
     logoutBtn: document.getElementById('logoutBtn')
 };
 
-// Initialisation de l'application
-document.addEventListener('DOMContentLoaded', async () => {
-    await loadAuthenticationState();
-    setupEventListeners();
-    setupAuthEventListeners();
-    setupAuthMessageListeners();
-    await initializeApp();
-
-    // Attendre que freemiumManager soit initialisé (défini dans freemium.js)
-    if (typeof freemiumManager !== 'undefined') {
-        console.log('✅ FreemiumManager initialisé');
-        // Mettre à jour l'interface selon le plan utilisateur
-        updateUIBasedOnPlan();
-    }
-
-    // Reset de l'UI pour éviter les états incohérents
-    setTimeout(() => {
-        resetUI();
-        updateUIBasedOnPlan();
-    }, 100);
-});
+// Éléments DOM pour les options avancées
+elements.advancedHeader = document.getElementById('advancedHeader');
+elements.advancedContent = document.getElementById('advancedContent');
+elements.miniUpgradeBtn = document.getElementById('miniUpgradeBtn');
 
 // Mise à jour de l'interface selon le plan utilisateur
 function updateUIBasedOnPlan() {
@@ -1140,8 +1123,259 @@ async function handleAuthSuccess(token, user) {
         // Fermer la section d'authentification et afficher l'interface utilisateur
         updateUIForAuthenticatedUser();
 
+        // Démarrer le refresh périodique du token
+        setupTokenRefreshInterval();
+
     } catch (error) {
         console.error('❌ Erreur sauvegarde auth automatique:', error);
         showNotification('Erreur lors de la sauvegarde de l\'authentification', 'error');
     }
+}
+
+// =============================================================================
+// FONCTIONS D'AUTHENTIFICATION MANQUANTES
+// =============================================================================
+
+// Charger l'état d'authentification depuis le stockage local
+async function loadAuthenticationState() {
+    try {
+        const stored = await chrome.storage.local.get(['jwtToken', 'user']);
+        if (stored.jwtToken && stored.user) {
+            AppState.auth.jwtToken = stored.jwtToken;
+            AppState.auth.user = stored.user;
+            AppState.auth.isAuthenticated = true;
+
+            console.log('✅ Utilisateur authentifié:', AppState.auth.user.email);
+
+            // Vérifier la validité du token avec le backend
+            await validateTokenWithBackend();
+        } else {
+            console.log('🔍 Aucun token d\'authentification trouvé');
+            AppState.auth.isAuthenticated = false;
+        }
+    } catch (error) {
+        console.error('❌ Erreur chargement auth state:', error);
+        AppState.auth.isAuthenticated = false;
+    }
+}
+
+// Valider le token JWT avec le backend
+async function validateTokenWithBackend() {
+    try {
+        const response = await fetch(`${CONFIG.backend.baseUrl}${CONFIG.backend.endpoints.userMe}`, {
+            headers: {
+                'Authorization': `Bearer ${AppState.auth.jwtToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            AppState.auth.user = data.user;
+            console.log('✅ Token validé, utilisateur à jour');
+        } else {
+            // Token invalide, déconnecter l'utilisateur
+            console.warn('⚠️ Token invalide, déconnexion...');
+            await logout();
+        }
+    } catch (error) {
+        console.error('❌ Erreur validation token:', error);
+        // Ne pas déconnecter automatiquement en cas d'erreur réseau
+    }
+}
+
+// Charger les clés API locales (fallback)
+async function loadApiKeys() {
+    try {
+        const result = await chrome.storage.local.get(['openaiKey', 'googleVisionKey']);
+        if (result.openaiKey) {
+            AppState.apiKeys.openai = result.openaiKey;
+            console.log('✅ Clé OpenAI chargée');
+        }
+        if (result.googleVisionKey) {
+            AppState.apiKeys.googleVision = result.googleVisionKey;
+            console.log('✅ Clé Google Vision chargée');
+        }
+    } catch (error) {
+        console.error('❌ Erreur chargement clés API:', error);
+    }
+}
+
+// =============================================================================
+// INITIALISATION DE L'APPLICATION
+// =============================================================================
+
+// Initialisation au chargement du DOM
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🚀 Perfect Insta Post - Initialisation');
+
+    try {
+        // Configuration des event listeners d'authentification
+        setupAuthEventListeners();
+        setupAuthMessageListeners();
+
+        // Charger l'état d'authentification depuis le stockage
+        await loadAuthenticationState();
+
+        // Initialiser l'interface selon l'état d'auth
+        await initializeApp();
+
+        // Configuration des event listeners principaux
+        setupMainEventListeners();
+
+        // Reset de l'UI
+        resetUI();
+
+        console.log('✅ Application initialisée avec succès');
+
+        // Refresh périodique du token (toutes les 5 minutes si connecté)
+        if (AppState.auth.isAuthenticated) {
+            setupTokenRefreshInterval();
+        }
+
+    } catch (error) {
+        console.error('❌ Erreur initialisation:', error);
+        showNotification('Erreur lors de l\'initialisation de l\'extension', 'error');
+    }
+});
+
+// Refresh périodique du token pendant que le popup est ouvert
+function setupTokenRefreshInterval() {
+    // Vérifier le token toutes les 5 minutes
+    const refreshInterval = setInterval(async () => {
+        if (AppState.auth.isAuthenticated) {
+            console.log('🔄 Vérification périodique du token...');
+            await validateTokenWithBackend();
+        } else {
+            // Arrêter l'interval si l'utilisateur s'est déconnecté
+            clearInterval(refreshInterval);
+        }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Nettoyer l'interval quand le popup se ferme
+    window.addEventListener('beforeunload', () => {
+        clearInterval(refreshInterval);
+    });
+}
+
+// Configuration des event listeners principaux
+function setupMainEventListeners() {
+    // Upload d'image
+    if (elements.uploadArea) {
+        elements.uploadArea.addEventListener('click', () => {
+            if (AppState.auth.isAuthenticated) {
+                elements.imageInput.click();
+            }
+        });
+
+        elements.uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (AppState.auth.isAuthenticated) {
+                elements.uploadArea.classList.add('drag-over');
+            }
+        });
+
+        elements.uploadArea.addEventListener('dragleave', () => {
+            elements.uploadArea.classList.remove('drag-over');
+        });
+
+        elements.uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            elements.uploadArea.classList.remove('drag-over');
+
+            if (AppState.auth.isAuthenticated && e.dataTransfer.files.length > 0) {
+                handleImageUpload(e.dataTransfer.files[0]);
+            }
+        });
+    }
+
+    if (elements.imageInput) {
+        elements.imageInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleImageUpload(e.target.files[0]);
+            }
+        });
+    }
+
+    // Génération de post
+    if (elements.generateBtn) {
+        elements.generateBtn.addEventListener('click', generatePost);
+    }
+
+    // Actions des résultats
+    if (elements.copyBtn) {
+        elements.copyBtn.addEventListener('click', copyToClipboard);
+    }
+
+    if (elements.newPostBtn) {
+        elements.newPostBtn.addEventListener('click', resetApp);
+    }
+
+    // Options avancées (collapsible)
+    if (elements.advancedHeader) {
+        elements.advancedHeader.addEventListener('click', toggleAdvancedOptions);
+    }
+
+    // Boutons upgrade Pro
+    if (elements.miniUpgradeBtn) {
+        elements.miniUpgradeBtn.addEventListener('click', () => {
+            if (typeof paymentManager !== 'undefined') {
+                paymentManager.initializePayment(AppState.auth.user?.email || 'anonymous@example.com');
+            }
+        });
+    }
+
+    console.log('🔧 Event listeners principaux configurés');
+}
+
+// Toggle des options avancées
+function toggleAdvancedOptions() {
+    const content = elements.advancedContent;
+    const icon = elements.advancedHeader.querySelector('.collapse-icon');
+
+    if (content.style.display === 'none' || !content.style.display) {
+        content.style.display = 'block';
+        icon.textContent = '▲';
+    } else {
+        content.style.display = 'none';
+        icon.textContent = '▼';
+    }
+}
+
+// Gestion de l'upload d'image
+function handleImageUpload(file) {
+    if (!AppState.auth.isAuthenticated) {
+        showNotification('Veuillez vous connecter pour uploader une image', 'error');
+        return;
+    }
+
+    // Vérifications
+    if (!CONFIG.supportedFormats.includes(file.type)) {
+        showNotification('Format non supporté. Utilisez JPG, PNG ou WebP.', 'error');
+        return;
+    }
+
+    if (file.size > CONFIG.maxFileSize) {
+        showNotification('Fichier trop volumineux. Maximum 10MB.', 'error');
+        return;
+    }
+
+    AppState.currentImage = file;
+
+    // Prévisualisation
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        elements.previewImage.src = e.target.result;
+        elements.previewImage.hidden = false;
+        elements.uploadArea.querySelector('.upload-placeholder').style.display = 'none';
+        elements.uploadArea.classList.add('has-image');
+        elements.uploadArea.classList.remove('isolated');
+
+        // Agrandir le popup et afficher la config
+        document.body.classList.add('expanded');
+        showSection('configSection');
+
+        console.log('✅ Image uploadée:', file.name);
+    };
+    reader.readAsDataURL(file);
 }

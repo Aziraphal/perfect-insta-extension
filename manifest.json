@@ -4,9 +4,8 @@
   "version": "1.0.0",
   "description": "Generate perfect Instagram posts from your photos with AI-powered captions and hashtags",
   "permissions": [
-    "activeTab",
-    "storage",
-    "tabs"
+    "identity",
+    "storage"
   ],
   "host_permissions": [
     "https://vision.googleapis.com/*",

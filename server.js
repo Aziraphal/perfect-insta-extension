@@ -203,9 +203,15 @@ app.post('/api/debug-user', async (req, res) => {
 // =============================================================================
 
 // Route de connexion Google
-app.get('/auth/google', passport.authenticate('google', {
-    scope: ['profile', 'email']
-}));
+app.get('/auth/google', (req, res, next) => {
+    // Stocker le redirect_uri pour le callback
+    req.session.redirect_uri = req.query.redirect_uri;
+    console.log('📍 Redirect URI stocké:', req.query.redirect_uri);
+
+    passport.authenticate('google', {
+        scope: ['profile', 'email']
+    })(req, res, next);
+});
 
 // Route de callback Google OAuth
 app.get('/auth/google/callback',
@@ -225,7 +231,27 @@ app.get('/auth/google/callback',
 
             console.log('✅ JWT généré pour:', req.user.email);
 
-            // Page avec transfert automatique vers l'extension
+            // Récupérer le redirect_uri depuis la session
+            const redirectUri = req.session.redirect_uri;
+
+            if (redirectUri && redirectUri.includes('chromiumapp.org')) {
+                // Redirection chrome.identity avec token et user dans le hash
+                const userEncoded = encodeURIComponent(JSON.stringify({
+                    id: req.user.id,
+                    email: req.user.email,
+                    name: req.user.name,
+                    plan: req.user.plan,
+                    postsThisMonth: req.user.postsThisMonth
+                }));
+
+                const finalRedirectUrl = `${redirectUri}#token=${token}&user=${userEncoded}`;
+                console.log('🔗 Redirection chrome.identity vers:', finalRedirectUrl);
+
+                res.redirect(finalRedirectUrl);
+                return;
+            }
+
+            // Fallback: Page avec transfert automatique vers l'extension (ancien système)
             res.send(`
                 <html>
                 <head>
