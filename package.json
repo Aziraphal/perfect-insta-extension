@@ -8,18 +8,32 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "@prisma/client": "^6.16.1",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
-    "stripe": "^12.18.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "prisma": "^6.16.1",
+    "stripe": "^12.18.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "nodemon": "^3.0.1"
   },
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["instagram", "ai", "chrome-extension", "stripe"],
+  "keywords": [
+    "instagram",
+    "ai",
+    "chrome-extension",
+    "stripe"
+  ],
   "author": "Perfect Insta Post",
   "license": "MIT"
 }

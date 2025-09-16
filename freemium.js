@@ -228,6 +228,36 @@ class FreemiumManager {
         console.log('💡 Suggestion upgrade subtile');
     }
 
+    // Fonction pour activer Pro directement (pour le développeur)
+    async upgradeToProDirect() {
+        try {
+            await chrome.storage.local.set({
+                userPlan: 'pro',
+                postsThisMonth: 0, // Reset compteur
+                monthlyResetDate: this.getNextResetDate().getTime()
+            });
+
+            this.userPlan = 'pro';
+            this.postsThisMonth = 0;
+
+            // Rafraîchir l'interface
+            this.updateUI();
+
+            // Mettre à jour l'interface popup si la fonction existe
+            if (typeof updateUIBasedOnPlan === 'function') {
+                updateUIBasedOnPlan();
+            }
+
+            console.log('✅ Compte passé en Pro !');
+            alert('🚀 Votre compte est maintenant PRO !\n\n✨ 50 posts par mois\n📍 Localisation + contexte\n🎨 Styles avancés\n💧 Pas de watermark');
+
+            return true;
+        } catch (error) {
+            console.error('Erreur upgrade Pro:', error);
+            return false;
+        }
+    }
+
     showUpgradeModal() {
         // Utiliser le système de paiement si disponible
         if (typeof paymentManager !== 'undefined') {

@@ -599,6 +599,162 @@ body.expanded .advanced-section {
     }
 }
 
+/* Pro Features Preview */
+.pro-features-preview {
+    margin-top: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, #f8f9ff 0%, #f0f7ff 100%);
+    border-radius: 12px;
+    border: 1px solid #e0e7ff;
+    transition: all 0.3s ease;
+}
+
+.upload-area.has-image .pro-features-preview {
+    display: none;
+}
+
+/* Message de félicitations Pro */
+.pro-welcome {
+    text-align: center;
+}
+
+.pro-welcome-header h4 {
+    margin: 0 0 10px 0;
+    color: var(--primary-color);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.pro-welcome-content p {
+    margin: 0 0 15px 0;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.pro-benefits-active {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.benefit-active {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.usage-info {
+    padding-top: 8px;
+    border-top: 1px solid #e0e7ff;
+}
+
+.usage-info small {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.features-header {
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.features-header h4 {
+    margin: 0;
+    color: var(--primary-color);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+    transition: all 0.2s ease;
+}
+
+.feature-item:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(228, 64, 95, 0.1);
+}
+
+.feature-icon {
+    font-size: 16px;
+    margin-top: 1px;
+}
+
+.feature-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.feature-text strong {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.feature-text small {
+    font-size: 10px;
+    color: var(--text-secondary);
+    line-height: 1.2;
+}
+
+.pro-cta {
+    text-align: center;
+}
+
+.mini-upgrade-btn {
+    background: linear-gradient(45deg, #e4405f, #833ab4);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+}
+
+.mini-upgrade-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(228, 64, 95, 0.3);
+}
+
+.mini-upgrade-btn span {
+    font-size: 12px;
+}
+
+.mini-upgrade-btn small {
+    font-size: 10px;
+    opacity: 0.9;
+    font-weight: 400;
+}
+
 /* États */
 .hidden,
 [hidden] {
@@ -611,4 +767,175 @@ body.expanded .advanced-section {
 
 .success::after {
     content: " ✓";
+}
+
+/* =============================================================================
+   AUTHENTICATION SECTION
+   ============================================================================= */
+
+.auth-section {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    margin: 20px;
+    color: white;
+}
+
+.auth-content h3 {
+    margin: 0 0 16px 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.auth-info {
+    font-size: 16px;
+    opacity: 0.9;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.auth-benefits {
+    display: grid;
+    gap: 12px;
+    margin: 24px 0;
+    text-align: left;
+}
+
+.benefit-item {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    font-size: 14px;
+    border-left: 4px solid #4CAF50;
+}
+
+.google-login-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 16px 24px;
+    background: white;
+    color: #333;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 24px 0 16px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.google-login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.google-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.auth-note {
+    font-size: 12px;
+    opacity: 0.7;
+    margin: 0;
+}
+
+.back-btn {
+    background: transparent;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 12px;
+    transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* User bar styles */
+.user-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f8f9ff, #e8f4f8);
+    border-radius: 12px;
+    margin: 0 18px 20px 18px;
+    border: 1px solid #e3f2fd;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-email {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.user-plan {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.user-plan:contains("FREE") {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.user-plan:contains("PRO") {
+    background: linear-gradient(135deg, #ffd700, #ffb300);
+    color: #333;
+}
+
+.usage-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.usage-text {
+    font-size: 12px;
+    color: #666;
+}
+
+.logout-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    color: #666;
+}
+
+.logout-btn:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+/* Upload area disabled state */
+.upload-area.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+    filter: grayscale(0.5);
 }

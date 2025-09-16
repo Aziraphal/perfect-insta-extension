@@ -5,6 +5,14 @@ const CONFIG = {
     apiEndpoints: {
         openai: 'https://api.openai.com/v1/chat/completions',
         googleVision: 'https://vision.googleapis.com/v1/images:annotate'
+    },
+    backend: {
+        baseUrl: 'http://localhost:8084',
+        endpoints: {
+            auth: '/auth/google',
+            userMe: '/api/user/me',
+            generatePost: '/api/generate-post'
+        }
     }
 };
 
@@ -15,7 +23,12 @@ const AppState = {
         openai: null,
         googleVision: null
     },
-    analysisResults: null
+    analysisResults: null,
+    auth: {
+        isAuthenticated: false,
+        jwtToken: null,
+        user: null
+    }
 };
 
 // Éléments DOM
@@ -26,6 +39,7 @@ const elements = {
     configSection: document.getElementById('configSection'),
     resultsSection: document.getElementById('resultsSection'),
     apiKeysSection: document.getElementById('apiKeysSection'),
+    authSection: document.getElementById('authSection'),
     postType: document.getElementById('postType'),
     tone: document.getElementById('tone'),
     location: document.getElementById('location'),
@@ -40,25 +54,83 @@ const elements = {
     newPostBtn: document.getElementById('newPostBtn'),
     openaiKey: document.getElementById('openaiKey'),
     googleVisionKey: document.getElementById('googleVisionKey'),
-    saveApiKeys: document.getElementById('saveApiKeys')
+    saveApiKeys: document.getElementById('saveApiKeys'),
+    // Nouveaux éléments d'authentification
+    googleLoginBtn: document.getElementById('googleLoginBtn'),
+    backToOAuth: document.getElementById('backToOAuth'),
+    userBar: document.getElementById('userBar'),
+    userEmail: document.getElementById('userEmail'),
+    userPlan: document.getElementById('userPlan'),
+    usageText: document.getElementById('usageText'),
+    upgradeBtn: document.getElementById('upgradeBtn'),
+    logoutBtn: document.getElementById('logoutBtn')
 };
 
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', async () => {
-    await loadApiKeys();
+    await loadAuthenticationState();
     setupEventListeners();
-    checkFirstTimeUser();
+    setupAuthEventListeners();
+    await initializeApp();
 
     // Attendre que freemiumManager soit initialisé (défini dans freemium.js)
     if (typeof freemiumManager !== 'undefined') {
         console.log('✅ FreemiumManager initialisé');
+        // Mettre à jour l'interface selon le plan utilisateur
+        updateUIBasedOnPlan();
     }
 
     // Reset de l'UI pour éviter les états incohérents
     setTimeout(() => {
         resetUI();
+        updateUIBasedOnPlan();
     }, 100);
 });
+
+// Mise à jour de l'interface selon le plan utilisateur
+function updateUIBasedOnPlan() {
+    if (typeof freemiumManager === 'undefined') return;
+
+    const usage = freemiumManager.getUsageInfo();
+    const isPro = usage.isPro;
+
+    // Éléments à contrôler
+    const proFeaturesPreview = document.getElementById('proFeaturesPreview');
+    const proOverlay = document.getElementById('proOverlay');
+
+    if (isPro) {
+        // Utilisateur Pro : remplacer par message de félicitations
+        if (proFeaturesPreview) {
+            proFeaturesPreview.innerHTML = `
+                <div class="pro-welcome">
+                    <div class="pro-welcome-header">
+                        <h4>🎉 Félicitations, vous êtes Pro !</h4>
+                    </div>
+                    <div class="pro-welcome-content">
+                        <p>✨ Boostez vos posts Instagram de manière optimale</p>
+                        <div class="pro-benefits-active">
+                            <span class="benefit-active">📍 Localisation personnalisée</span>
+                            <span class="benefit-active">🎯 Contexte sur mesure</span>
+                            <span class="benefit-active">🎨 Styles avancés</span>
+                            <span class="benefit-active">💧 Sans watermark</span>
+                        </div>
+                        <div class="usage-info">
+                            <small>📊 ${usage.postsUsed}/${usage.postsLimit} posts ce mois</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            proFeaturesPreview.style.display = 'block';
+        }
+        if (proOverlay) proOverlay.hidden = true;
+        console.log('🚀 Interface Pro activée');
+    } else {
+        // Utilisateur gratuit : afficher les promo
+        if (proFeaturesPreview) proFeaturesPreview.style.display = 'block';
+        if (proOverlay) proOverlay.hidden = false;
+        console.log('💧 Interface gratuite activée');
+    }
+}
 
 // Configuration des écouteurs d'événements
 function setupEventListeners() {
@@ -85,12 +157,22 @@ function setupEventListeners() {
     // Freemium upgrade buttons
     const upgradeBtn = document.getElementById('upgradeBtn');
     const upgradeFromOverlay = document.getElementById('upgradeFromOverlay');
+    const miniUpgradeBtn = document.getElementById('miniUpgradeBtn');
 
     if (upgradeBtn) {
         upgradeBtn.addEventListener('click', () => freemiumManager.showUpgradeModal());
     }
     if (upgradeFromOverlay) {
         upgradeFromOverlay.addEventListener('click', () => freemiumManager.showUpgradeModal());
+    }
+    if (miniUpgradeBtn) {
+        miniUpgradeBtn.addEventListener('click', () => {
+            // Analytics: track early conversion intent
+            if (typeof analyticsManager !== 'undefined') {
+                analyticsManager.trackUpgradeFlow('early_interest', 'pro', 'preview_features');
+            }
+            freemiumManager.showUpgradeModal();
+        });
     }
 }
 
@@ -420,7 +502,7 @@ async function generateContent(analysis) {
         'personal': 'Exprime des sentiments personnels, partage une expérience intime'
     };
 
-    const systemPrompt = `Tu es un expert en marketing Instagram. Tu dois générer un post Instagram parfait basé sur l'analyse d'image fournie.
+    const systemPrompt = `Tu es un expert en marketing Instagram spécialisé dans l'optimisation des hashtags pour maximiser la portée et l'engagement.
 
 Analyse de l'image:
 - Labels détectés: ${analysis.labels.map(l => l.description).join(', ')}
@@ -437,18 +519,44 @@ Paramètres demandés:
 
 Génère une réponse JSON avec cette structure exacte:
 {
-  "caption": "Légende engageante de 100-200 mots avec emojis appropriés",
+  "caption": "Légende engageante avec emojis appropriés",
   "hashtags": ["hashtag1", "hashtag2", "hashtag3", "hashtag4", "hashtag5", "hashtag6", "hashtag7", "hashtag8", "hashtag9", "hashtag10"],
   "suggestions": ["Suggestion 1 pour améliorer l'engagement", "Suggestion 2", "Suggestion 3"]
 }
 
-Important:
-- Utilise des hashtags populaires mais pas trop génériques
-- Inclus des hashtags de niche pertinents${location ? `\n- Ajoute des hashtags géolocalisés pour: ${location}` : ''}
-- La légende doit être authentique et engageante
-- Adapte le style au ton demandé et au contexte fourni
-- Inclus des call-to-action subtiles
-- Respecte strictement la longueur et le style demandés`;
+RÈGLES STRICTES POUR LES HASHTAGS:
+1. STRUCTURE OBLIGATOIRE (exactement 10 hashtags):
+   - 3 hashtags POPULAIRES (500k-2M posts): Ex: #Travel, #Sunset, #Photography
+   - 4 hashtags MOYENS (50k-500k posts): Ex: #VietnamTravel, #SoutheastAsia, #PeacefulMoments
+   - 3 hashtags NICHES (<50k posts): Ex: #NinhBinhViews, #HiddenGems2024, #LakeReflections
+
+2. INTERDICTIONS ABSOLUES:
+   - JAMAIS de doublons dans la liste
+   - ÉVITER: #love, #instagood, #photooftheday, #beautiful, #happy (trop saturés)
+   - ÉVITER: #follow, #like, #followme (spammy)
+
+3. HASHTAGS GÉOLOCALISÉS ${location ? `pour ${location}` : '(si lieu fourni)'}:
+   ${location ? `- Inclure: #${location.replace(/[^a-zA-Z0-9]/g, '')}, #${location.split(' ')[0]}Views, #Hidden${location.split(' ')[0]}` : '- Si lieu donné, créer des hashtags géo spécifiques'}
+
+4. OPTIMISATION PAR TYPE:
+   - VOYAGE: Mélanger destination + expérience (#VietnamAdventure, #OffTheBeatenPath)
+   - NOURRITURE: Cuisine + moment (#ItalianCuisine, #FoodieFinds, #LocalEats)
+   - LIFESTYLE: Activité + sentiment (#MorningRitual, #SimpleJoys, #DailyInspiration)
+   - MODE: Style + occasion (#StreetStyle, #OutfitInspiration, #FashionDaily)
+   - BUSINESS: Secteur + valeur (#EntrepreneurLife, #BusinessTips, #StartupJourney)
+
+5. VÉRIFICATION FINALE:
+   - Aucun hashtag répété
+   - Mix de popularité respecté
+   - Pertinence avec l'image analysée
+   - Géolocalisation incluse si fournie
+
+LÉGENDE:
+- Authentique et engageante selon le ton ${tone}
+- Style ${captionStyle} appliqué
+- Longueur: ${lengthInstructions[captionLength]}
+- Emojis pertinents (2-4 maximum)
+- Call-to-action subtil intégré`;
 
     try {
         const response = await fetch(CONFIG.apiEndpoints.openai, {
@@ -522,7 +630,9 @@ function displayResults(content) {
     content.hashtags.forEach(hashtag => {
         const hashtagElement = document.createElement('span');
         hashtagElement.className = 'hashtag';
-        hashtagElement.textContent = `#${hashtag}`;
+        // Éviter double # si l'IA retourne déjà avec #
+        const cleanHashtag = hashtag.startsWith('#') ? hashtag : `#${hashtag}`;
+        hashtagElement.textContent = cleanHashtag;
         elements.hashtagsContainer.appendChild(hashtagElement);
     });
 
@@ -630,4 +740,332 @@ function showNotification(message, type = 'info') {
     // Implémentation simple avec alert pour l'instant
     // À améliorer avec une notification toast personnalisée
     alert(message);
+}
+
+// =============================================================================
+// GÉNÉRATION DE POST
+// =============================================================================
+
+async function generatePost() {
+    try {
+        // Vérifications préalables
+        if (!AppState.currentImage) {
+            showNotification('Veuillez d\'abord uploader une image', 'error');
+            return;
+        }
+
+        // Vérifier l'authentification
+        if (!AppState.auth.isAuthenticated) {
+            showNotification('Veuillez vous connecter pour générer un post', 'error');
+            return;
+        }
+
+        setLoading(true);
+
+        // Préparer la configuration
+        const config = {
+            postType: elements.postType.value,
+            tone: elements.tone.value,
+            location: elements.location.value,
+            context: elements.context.value,
+            captionLength: elements.captionLength.value,
+            captionStyle: elements.captionStyle.value
+        };
+
+        // Convertir l'image en base64
+        const imageData = await getImageAsBase64(AppState.currentImage);
+
+        let content;
+
+        try {
+            // Essayer d'utiliser le backend authentifié
+            content = await generatePostWithBackend(imageData, config);
+            console.log('✅ Contenu généré via backend');
+        } catch (backendError) {
+            console.error('❌ Erreur backend:', backendError);
+
+            // Fallback vers les API locales si disponibles
+            if (AppState.apiKeys.openai && AppState.apiKeys.googleVision) {
+                console.log('🔄 Fallback vers API locales...');
+
+                // Analyser l'image avec Google Vision
+                const analysis = await analyzeImageWithVision(imageData);
+                AppState.analysisResults = analysis;
+
+                // Générer le contenu avec OpenAI
+                content = await generateContent(analysis, config);
+                console.log('✅ Contenu généré via API locales');
+            } else {
+                throw backendError;
+            }
+        }
+
+        // Afficher les résultats
+        displayResults(content);
+
+        // Analytics
+        if (typeof analyticsManager !== 'undefined') {
+            analyticsManager.trackFeatureUsage('generate_post', {
+                postType: config.postType,
+                tone: config.tone,
+                userPlan: AppState.auth.user?.plan || 'unknown'
+            });
+        }
+
+        // Afficher la section des résultats
+        showSection('resultsSection');
+
+    } catch (error) {
+        console.error('❌ Erreur génération:', error);
+
+        if (error.message.includes('Token') || error.message.includes('Session')) {
+            showNotification('Session expirée, veuillez vous reconnecter', 'error');
+        } else if (error.message.includes('Quota')) {
+            showNotification('Quota de posts atteint. Passez à Pro pour plus de posts !', 'error');
+        } else {
+            showNotification('Erreur lors de la génération: ' + error.message, 'error');
+        }
+    } finally {
+        setLoading(false);
+    }
+}
+
+// Convertir l'image en base64
+function getImageAsBase64(imageFile) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result;
+            // Extraire seulement les données base64 (sans le préfixe data:image/...)
+            const base64Data = result.split(',')[1];
+            resolve(base64Data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(imageFile);
+    });
+}
+
+// =============================================================================
+// FONCTIONS D'AUTHENTIFICATION OAUTH
+// =============================================================================
+
+// Charger l'état d'authentification depuis le stockage local
+async function loadAuthenticationState() {
+    try {
+        const stored = await chrome.storage.local.get(['jwtToken', 'user']);
+        if (stored.jwtToken && stored.user) {
+            AppState.auth.jwtToken = stored.jwtToken;
+            AppState.auth.user = stored.user;
+            AppState.auth.isAuthenticated = true;
+
+            console.log('✅ Utilisateur authentifié:', AppState.auth.user.email);
+
+            // Vérifier la validité du token avec le backend
+            await validateTokenWithBackend();
+        }
+    } catch (error) {
+        console.error('❌ Erreur chargement auth state:', error);
+        AppState.auth.isAuthenticated = false;
+    }
+}
+
+// Valider le token JWT avec le backend
+async function validateTokenWithBackend() {
+    try {
+        const response = await fetch(`${CONFIG.backend.baseUrl}${CONFIG.backend.endpoints.userMe}`, {
+            headers: {
+                'Authorization': `Bearer ${AppState.auth.jwtToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            AppState.auth.user = data.user;
+            console.log('✅ Token validé, utilisateur à jour');
+        } else {
+            // Token invalide, déconnecter l'utilisateur
+            console.warn('⚠️ Token invalide, déconnexion...');
+            await logout();
+        }
+    } catch (error) {
+        console.error('❌ Erreur validation token:', error);
+        await logout();
+    }
+}
+
+// Connexion Google OAuth
+function loginWithGoogle() {
+    const authUrl = `${CONFIG.backend.baseUrl}${CONFIG.backend.endpoints.auth}`;
+    console.log('🔐 Redirection vers:', authUrl);
+
+    // Ouvrir l'OAuth dans un nouvel onglet
+    chrome.tabs.create({ url: authUrl });
+}
+
+// Sauvegarder le token JWT (appelé depuis l'onglet OAuth)
+async function saveJWTToken(token, user) {
+    try {
+        await chrome.storage.local.set({ jwtToken: token, user: user });
+        AppState.auth.jwtToken = token;
+        AppState.auth.user = user;
+        AppState.auth.isAuthenticated = true;
+
+        console.log('✅ Token sauvegardé, utilisateur connecté');
+        updateUIForAuthenticatedUser();
+    } catch (error) {
+        console.error('❌ Erreur sauvegarde token:', error);
+    }
+}
+
+// Déconnexion
+async function logout() {
+    try {
+        await chrome.storage.local.remove(['jwtToken', 'user']);
+        AppState.auth.jwtToken = null;
+        AppState.auth.user = null;
+        AppState.auth.isAuthenticated = false;
+
+        console.log('✅ Utilisateur déconnecté');
+        updateUIForUnauthenticatedUser();
+    } catch (error) {
+        console.error('❌ Erreur déconnexion:', error);
+    }
+}
+
+// Initialisation de l'application
+async function initializeApp() {
+    if (AppState.auth.isAuthenticated) {
+        updateUIForAuthenticatedUser();
+        await loadApiKeys(); // Fallback pour les clés API manuelles
+    } else {
+        updateUIForUnauthenticatedUser();
+    }
+}
+
+// Mettre à jour l'interface pour un utilisateur connecté
+function updateUIForAuthenticatedUser() {
+    console.log('🎨 UI: Utilisateur connecté');
+
+    // Masquer la section d'authentification
+    hideSection('authSection');
+    hideSection('apiKeysSection');
+
+    // Afficher la barre utilisateur
+    elements.userBar.hidden = false;
+    elements.userEmail.textContent = AppState.auth.user.email;
+    elements.userPlan.textContent = AppState.auth.user.plan.toUpperCase();
+    elements.usageText.textContent = `${AppState.auth.user.postsThisMonth}/${AppState.auth.user.plan === 'free' ? 5 : 50} posts ce mois`;
+
+    // Afficher/masquer le bouton d'upgrade
+    if (AppState.auth.user.plan === 'free') {
+        elements.upgradeBtn.hidden = false;
+    } else {
+        elements.upgradeBtn.hidden = true;
+    }
+
+    // Permettre l'upload d'images
+    elements.uploadArea.style.pointerEvents = 'auto';
+    elements.uploadArea.style.opacity = '1';
+}
+
+// Mettre à jour l'interface pour un utilisateur non connecté
+function updateUIForUnauthenticatedUser() {
+    console.log('🎨 UI: Utilisateur non connecté');
+
+    // Masquer la barre utilisateur
+    elements.userBar.hidden = true;
+
+    // Afficher la section d'authentification
+    showSection('authSection');
+    hideSection('apiKeysSection');
+
+    // Désactiver l'upload d'images
+    elements.uploadArea.style.pointerEvents = 'none';
+    elements.uploadArea.style.opacity = '0.5';
+
+    // Masquer les autres sections
+    hideSection('configSection');
+    hideSection('resultsSection');
+}
+
+// Générer un post avec authentification backend
+async function generatePostWithBackend(imageData, config) {
+    if (!AppState.auth.isAuthenticated) {
+        throw new Error('Utilisateur non authentifié');
+    }
+
+    try {
+        const response = await fetch(`${CONFIG.backend.baseUrl}${CONFIG.backend.endpoints.generatePost}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${AppState.auth.jwtToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                imageData: imageData,
+                config: config
+            })
+        });
+
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                // Token expiré ou invalide
+                await logout();
+                throw new Error('Session expirée, veuillez vous reconnecter');
+            }
+            throw new Error(`Erreur backend: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // Mettre à jour le compteur d'usage
+        if (data.user) {
+            AppState.auth.user = data.user;
+            elements.usageText.textContent = `${data.user.postsThisMonth}/${data.user.plan === 'free' ? 5 : 50} posts ce mois`;
+        }
+
+        return data.content;
+
+    } catch (error) {
+        console.error('❌ Erreur génération backend:', error);
+        throw error;
+    }
+}
+
+// =============================================================================
+// MODIFICATION DES EVENT LISTENERS
+// =============================================================================
+
+// Ajouter les nouveaux event listeners pour l'authentification
+function setupAuthEventListeners() {
+    // Connexion Google
+    if (elements.googleLoginBtn) {
+        elements.googleLoginBtn.addEventListener('click', loginWithGoogle);
+    }
+
+    // Retour à OAuth depuis les clés API
+    if (elements.backToOAuth) {
+        elements.backToOAuth.addEventListener('click', () => {
+            hideSection('apiKeysSection');
+            showSection('authSection');
+        });
+    }
+
+    // Déconnexion
+    if (elements.logoutBtn) {
+        elements.logoutBtn.addEventListener('click', logout);
+    }
+
+    // Upgrade Pro
+    if (elements.upgradeBtn) {
+        elements.upgradeBtn.addEventListener('click', () => {
+            // Intégration avec payment.js si disponible
+            if (typeof paymentManager !== 'undefined') {
+                paymentManager.initializePayment(AppState.auth.user.email);
+            } else {
+                showNotification('Fonctionnalité de paiement en cours de développement');
+            }
+        });
+    }
 }

@@ -9,7 +9,7 @@ class AnalyticsManager {
 
         // Configuration analytics
         this.config = {
-            trackingEnabled: true,
+            trackingEnabled: false, // Désactivé pendant le développement
             batchSize: 10, // Envoyer par lots de 10 événements
             flushInterval: 30000, // Envoyer toutes les 30s
             retryAttempts: 3
@@ -138,7 +138,7 @@ class AnalyticsManager {
             // Dans un vrai déploiement, envoyer à votre service d'analytics
             // Exemple avec un backend personnalisé ou service tiers (Mixpanel, Amplitude, etc.)
 
-            const response = await fetch('https://your-backend.com/api/analytics/batch', {
+            const response = await fetch('https://perfect-insta-extension-production.up.railway.app/api/analytics/batch', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
