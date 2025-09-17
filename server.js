@@ -8,9 +8,15 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const jwt = require('jsonwebtoken');
 const session = require('express-session');
+const OpenAI = require('openai');
 
 const app = express();
 const prisma = new PrismaClient();
+
+// Initialiser OpenAI
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
 
 // Middleware
 app.use(cors({
@@ -579,17 +585,8 @@ app.post('/api/generate-post', authenticateJWT, async (req, res) => {
             });
         }
 
-        // Simuler la génération de contenu (ici on peut intégrer OpenAI + Google Vision)
-        // Pour l'instant, on retourne un contenu exemple
-        const content = {
-            caption: `Belle image partagée ! ✨ #${config.postType} #inspiration`,
-            hashtags: [`${config.postType}`, 'inspiration', 'beautiful', config.tone, 'lifestyle'],
-            suggestions: [
-                'Ajoutez une story pour plus d\'engagement',
-                'Postez aux heures de forte affluence',
-                'Engagez avec votre communauté'
-            ]
-        };
+        // Générer le contenu avec OpenAI GPT-4 Vision
+        const content = await generateInstagramPost(imageData, config);
 
         // Incrémenter le compteur de posts
         const updatedUser = await prisma.user.update({
@@ -780,6 +777,132 @@ app.post('/api/analytics/batch', (req, res) => {
 
     res.json({ success: true, processed: events.length });
 });
+
+// =============================================================================
+// GÉNÉRATION DE CONTENU INSTAGRAM AVEC OPENAI GPT-4 VISION
+// =============================================================================
+
+async function generateInstagramPost(imageData, config) {
+    try {
+        console.log('🤖 Génération du contenu avec OpenAI GPT-4 Vision...');
+
+        const prompt = `Analyse cette image et génère un post Instagram ${config.postType || 'lifestyle'} avec un ton ${config.tone || 'positif'}.
+
+Instructions spécifiques:
+- Longueur de la légende: ${config.captionLength || 'moyenne'}
+- Style de légende: ${config.captionStyle || 'naturel'}
+- Lieu/contexte: ${config.location || 'non spécifié'}
+- Contexte supplémentaire: ${config.context || 'aucun'}
+
+Retourne un JSON avec cette structure exacte:
+{
+  "caption": "Légende Instagram engageante et authentique",
+  "hashtags": ["hashtag1", "hashtag2", "hashtag3", "hashtag4", "hashtag5"],
+  "suggestions": ["Suggestion d'amélioration 1", "Suggestion d'amélioration 2", "Suggestion d'amélioration 3"]
+}
+
+Assure-toi que:
+- La légende est naturelle et engageante
+- Les hashtags sont pertinents et populaires
+- Les suggestions sont utiles pour améliorer l'engagement`;
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-4-vision-preview",
+            messages: [
+                {
+                    role: "user",
+                    content: [
+                        {
+                            type: "text",
+                            text: prompt
+                        },
+                        {
+                            type: "image_url",
+                            image_url: {
+                                url: `data:image/jpeg;base64,${imageData}`,
+                                detail: "high"
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens: 1000,
+            temperature: 0.8
+        });
+
+        const content = response.choices[0].message.content;
+        console.log('🎯 Réponse OpenAI reçue:', content);
+
+        // Parser la réponse JSON
+        let parsedContent;
+        try {
+            // Nettoyer la réponse si elle contient du markdown
+            const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+            parsedContent = JSON.parse(cleanContent);
+        } catch (parseError) {
+            console.warn('⚠️ Erreur parsing JSON, utilisation du fallback:', parseError);
+            // Fallback si le parsing échoue
+            parsedContent = {
+                caption: "Contenu généré par IA - analyse de votre belle image ! ✨",
+                hashtags: [config.postType || "lifestyle", config.tone || "inspiration", "ai", "beautiful", "moment"],
+                suggestions: [
+                    "Ajoutez plus de contexte dans la description",
+                    "Interagissez avec votre audience en posant une question",
+                    "Utilisez des emojis pour rendre le post plus engageant"
+                ]
+            };
+        }
+
+        // Validation et nettoyage des données
+        if (!parsedContent.caption) {
+            parsedContent.caption = "Belle image partagée ! ✨";
+        }
+
+        if (!Array.isArray(parsedContent.hashtags) || parsedContent.hashtags.length === 0) {
+            parsedContent.hashtags = [config.postType || "lifestyle", "inspiration", "beautiful"];
+        }
+
+        if (!Array.isArray(parsedContent.suggestions) || parsedContent.suggestions.length === 0) {
+            parsedContent.suggestions = [
+                "Ajoutez votre ressenti personnel",
+                "Mentionnez le lieu ou le moment",
+                "Posez une question à votre audience"
+            ];
+        }
+
+        // Nettoyer les hashtags (enlever # s'il y en a)
+        parsedContent.hashtags = parsedContent.hashtags.map(tag =>
+            typeof tag === 'string' ? tag.replace('#', '') : String(tag)
+        );
+
+        console.log('✅ Contenu généré avec succès');
+        return parsedContent;
+
+    } catch (error) {
+        console.error('❌ Erreur génération OpenAI:', error);
+
+        // Fallback en cas d'erreur
+        return {
+            caption: `Analyse de votre ${config.postType || 'image'} avec un style ${config.tone || 'inspirant'} ! ✨`,
+            hashtags: [
+                config.postType || "lifestyle",
+                config.tone || "inspiration",
+                "beautiful",
+                "moment",
+                "share"
+            ],
+            suggestions: [
+                "Ajoutez une description personnelle de ce moment",
+                "Mentionnez les personnes ou lieux importants",
+                "Utilisez des emojis pour plus d'engagement"
+            ]
+        };
+    }
+}
+
+// =============================================================================
+// DÉMARRAGE SERVEUR
+// =============================================================================
 
 // Démarrage serveur
 const PORT = process.env.PORT || 8080;
