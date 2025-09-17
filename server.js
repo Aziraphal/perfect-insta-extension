@@ -957,6 +957,17 @@ async function startServer() {
     // Test de connexion à la base de données
     await testDatabaseConnection();
 
+    // DEBUG: Upgrade cyril.paquier@gmail.com to Pro (temporaire)
+    try {
+        await prisma.user.updateMany({
+            where: { email: 'cyril.paquier@gmail.com' },
+            data: { plan: 'pro' }
+        });
+        console.log('🎯 DEBUG: Compte cyril.paquier@gmail.com upgradé vers Pro');
+    } catch (error) {
+        console.log('⚠️ Erreur upgrade Pro:', error.message);
+    }
+
     // Démarrage du serveur
     app.listen(PORT, '0.0.0.0', (err) => {
         if (err) {
