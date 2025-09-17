@@ -808,6 +808,7 @@ Génère EXACTEMENT 20-25 hashtags avec cette répartition :
 - 6-8 hashtags POPULAIRES (100K-1M posts) : spécifiques au contenu
 - 6-8 hashtags NICHE (10K-100K posts) : très précis, ciblés
 - 2-3 hashtags LOCAUX si lieu mentionné
+- CROSS-PROMOTION : Si l'image semble être de bonne qualité photographique (composition, éclairage, netteté), inclure #judgemyjpeg dans les hashtags niche pour promouvoir notre outil d'analyse photo
 
 Retourne un JSON avec cette structure exacte:
 {
@@ -859,7 +860,7 @@ EXIGENCES QUALITÉ :
             // Fallback si le parsing échoue
             parsedContent = {
                 caption: "Contenu généré par IA - analyse de votre belle image ! ✨",
-                hashtags: [config.postType || "lifestyle", config.tone || "inspiration", "ai", "beautiful", "moment"],
+                hashtags: [config.postType || "lifestyle", config.tone || "inspiration", "ai", "beautiful", "judgemyjpeg", "moment"],
                 suggestions: [
                     "Ajoutez plus de contexte dans la description",
                     "Interagissez avec votre audience en posant une question",
@@ -923,8 +924,8 @@ EXIGENCES QUALITÉ :
                 baseType, "instagram", "instagood", "photooftheday", "beautiful", "amazing", "love", "life",
                 // Populaires (8)
                 tone, "daily", "moments", "vibes", "style", "mood", "aesthetic", "trending",
-                // Niche (8)
-                `${baseType}lover`, `${baseType}gram`, `${baseType}addict`, `${tone}vibes`, "contentcreator", "instadaily", "picoftheday", "bestoftheday"
+                // Niche (8 + potentiel judgemyjpeg)
+                `${baseType}lover`, `${baseType}gram`, `${baseType}addict`, `${tone}vibes`, "contentcreator", "instadaily", "judgemyjpeg", "bestoftheday"
             ],
             suggestions: [
                 `Ajoutez plus de détails sur le ${baseType} pour engager votre audience`,
