@@ -786,25 +786,40 @@ async function generateInstagramPost(imageData, config) {
     try {
         console.log('🤖 Génération du contenu avec OpenAI GPT-4 Vision...');
 
-        const prompt = `Analyse cette image et génère un post Instagram ${config.postType || 'lifestyle'} avec un ton ${config.tone || 'positif'}.
+        const prompt = `Analyse cette image en détail et génère un post Instagram ${config.postType || 'lifestyle'} avec un ton ${config.tone || 'positif'}.
 
-Instructions spécifiques:
-- Longueur de la légende: ${config.captionLength || 'moyenne'}
+ANALYSE APPROFONDIE REQUISE :
+- Décris précisément ce que tu vois dans l'image
+- Identifie les couleurs, objets, personnes, ambiance
+- Note les détails qui rendent l'image unique
+- Considère l'émotion et l'atmosphère dégagées
+
+CONFIGURATION UTILISATEUR :
+- Type de post: ${config.postType || 'lifestyle'}
+- Ton: ${config.tone || 'positif'}
+- Longueur de légende: ${config.captionLength || 'moyenne'}
 - Style de légende: ${config.captionStyle || 'naturel'}
 - Lieu/contexte: ${config.location || 'non spécifié'}
 - Contexte supplémentaire: ${config.context || 'aucun'}
 
+STRATÉGIE HASHTAGS (CRITIQUE) :
+Génère EXACTEMENT 20-25 hashtags avec cette répartition :
+- 6-8 hashtags TRÈS POPULAIRES (1M+ posts) : les plus génériques du domaine
+- 6-8 hashtags POPULAIRES (100K-1M posts) : spécifiques au contenu
+- 6-8 hashtags NICHE (10K-100K posts) : très précis, ciblés
+- 2-3 hashtags LOCAUX si lieu mentionné
+
 Retourne un JSON avec cette structure exacte:
 {
-  "caption": "Légende Instagram engageante et authentique",
-  "hashtags": ["hashtag1", "hashtag2", "hashtag3", "hashtag4", "hashtag5"],
+  "caption": "Légende Instagram engageante basée sur l'analyse visuelle détaillée",
+  "hashtags": ["hashtag1", "hashtag2", "hashtag3", "...", "hashtag25"],
   "suggestions": ["Suggestion d'amélioration 1", "Suggestion d'amélioration 2", "Suggestion d'amélioration 3"]
 }
 
-Assure-toi que:
-- La légende est naturelle et engageante
-- Les hashtags sont pertinents et populaires
-- Les suggestions sont utiles pour améliorer l'engagement`;
+EXIGENCES QUALITÉ :
+- La légende DOIT refléter ce qui est vraiment visible dans l'image
+- Les hashtags DOIVENT être stratégiquement choisis selon la répartition populaire/niche
+- Les suggestions DOIVENT être actionnable et spécifiques à cette image`;
 
         const response = await openai.chat.completions.create({
             model: "gpt-4o",
@@ -859,7 +874,23 @@ Assure-toi que:
         }
 
         if (!Array.isArray(parsedContent.hashtags) || parsedContent.hashtags.length === 0) {
-            parsedContent.hashtags = [config.postType || "lifestyle", "inspiration", "beautiful"];
+            // Fallback avec stratégie hashtag complète
+            const baseType = config.postType || "lifestyle";
+            const tone = config.tone || "inspiration";
+            parsedContent.hashtags = [
+                // Très populaires
+                baseType, "instagram", "instagood", "photooftheday", "beautiful", "amazing", "love", "life",
+                // Populaires
+                tone, "daily", "moments", "vibes", "style", "mood", "aesthetic", "trending",
+                // Niche
+                `${baseType}lover`, `${baseType}gram`, `${baseType}addict`, `${tone}vibes`, "contentcreator", "instadaily", "share", "inspire"
+            ];
+        }
+
+        // S'assurer qu'on a au moins 15 hashtags
+        if (parsedContent.hashtags.length < 15) {
+            const additionalHashtags = ["instamood", "picoftheday", "bestoftheday", "instacool", "instalike", "followme", "tagsforlikes", "likeforlike"];
+            parsedContent.hashtags = [...parsedContent.hashtags, ...additionalHashtags].slice(0, 25);
         }
 
         if (!Array.isArray(parsedContent.suggestions) || parsedContent.suggestions.length === 0) {
@@ -881,20 +912,26 @@ Assure-toi que:
     } catch (error) {
         console.error('❌ Erreur génération OpenAI:', error);
 
-        // Fallback en cas d'erreur
+        // Fallback en cas d'erreur avec stratégie hashtag complète
+        const baseType = config.postType || "lifestyle";
+        const tone = config.tone || "inspiration";
+
         return {
-            caption: `Analyse de votre ${config.postType || 'image'} avec un style ${config.tone || 'inspirant'} ! ✨`,
+            caption: `Analyse de votre ${config.postType || 'image'} avec un style ${config.tone || 'inspirant'} ! ✨ ${config.location ? `Pris à ${config.location}.` : ''} ${config.context ? `${config.context}` : ''}`,
             hashtags: [
-                config.postType || "lifestyle",
-                config.tone || "inspiration",
-                "beautiful",
-                "moment",
-                "share"
+                // Très populaires (8)
+                baseType, "instagram", "instagood", "photooftheday", "beautiful", "amazing", "love", "life",
+                // Populaires (8)
+                tone, "daily", "moments", "vibes", "style", "mood", "aesthetic", "trending",
+                // Niche (8)
+                `${baseType}lover`, `${baseType}gram`, `${baseType}addict`, `${tone}vibes`, "contentcreator", "instadaily", "picoftheday", "bestoftheday"
             ],
             suggestions: [
-                "Ajoutez une description personnelle de ce moment",
-                "Mentionnez les personnes ou lieux importants",
-                "Utilisez des emojis pour plus d'engagement"
+                `Ajoutez plus de détails sur le ${baseType} pour engager votre audience`,
+                config.location ? "Mentionnez des spots similaires pour créer une conversation" : "Ajoutez la localisation pour plus de reach local",
+                `Utilisez un ton plus ${tone === 'casual' ? 'personnel' : 'casual'} pour varier votre contenu`,
+                "Posez une question spécifique à votre audience pour booster l'engagement",
+                "Ajoutez votre story personnelle liée à ce moment"
             ]
         };
     }
