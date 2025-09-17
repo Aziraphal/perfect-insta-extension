@@ -202,6 +202,17 @@ app.post('/api/debug-user', async (req, res) => {
 // ROUTES D'AUTHENTIFICATION GOOGLE OAUTH
 // =============================================================================
 
+// Route simplifiée pour extension (nouvel approche)
+app.get('/auth/extension', (req, res, next) => {
+    // Stocker un marqueur pour identifier le callback extension
+    req.session.extension_auth = true;
+    console.log('🔗 Authentification extension initiée');
+
+    passport.authenticate('google', {
+        scope: ['profile', 'email']
+    })(req, res, next);
+});
+
 // Route de connexion Google
 app.get('/auth/google', (req, res, next) => {
     // Stocker le redirect_uri pour le callback
@@ -230,6 +241,27 @@ app.get('/auth/google/callback',
             );
 
             console.log('✅ JWT généré pour:', req.user.email);
+
+            // Vérifier si c'est une authentification extension
+            if (req.session.extension_auth) {
+                // Redirection simple avec paramètres URL pour l'extension
+                const userEncoded = encodeURIComponent(JSON.stringify({
+                    id: req.user.id,
+                    email: req.user.email,
+                    name: req.user.name,
+                    plan: req.user.plan,
+                    postsThisMonth: req.user.postsThisMonth
+                }));
+
+                const successUrl = `https://perfect-insta-extension-production.up.railway.app/auth/success?success=true&token=${token}&user=${userEncoded}`;
+                console.log('🔗 Redirection extension vers:', successUrl);
+
+                // Nettoyer la session
+                req.session.extension_auth = null;
+
+                res.redirect(successUrl);
+                return;
+            }
 
             // Récupérer le redirect_uri depuis la session
             const redirectUri = req.session.redirect_uri;
@@ -405,6 +437,66 @@ app.post('/auth/logout', (req, res) => {
         }
         res.json({ success: true, message: 'Déconnexion réussie' });
     });
+});
+
+// Page de succès pour l'extension (nouvelle approche)
+app.get('/auth/success', (req, res) => {
+    const { success, token, user, error } = req.query;
+
+    if (error) {
+        res.send(`
+            <html>
+            <head>
+                <title>Perfect Insta Post - Erreur</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f44336; color: white; }
+                    .container { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 10px; max-width: 400px; margin: 0 auto; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h2>❌ Erreur d'authentification</h2>
+                    <p>${decodeURIComponent(error)}</p>
+                    <p><small>Vous pouvez fermer cette page et réessayer.</small></p>
+                </div>
+                <script>setTimeout(() => window.close(), 5000);</script>
+            </body>
+            </html>
+        `);
+        return;
+    }
+
+    if (success && token && user) {
+        res.send(`
+            <html>
+            <head>
+                <title>Perfect Insta Post - Connexion réussie</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #4CAF50; color: white; }
+                    .container { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 10px; max-width: 400px; margin: 0 auto; }
+                    .success { background: rgba(76, 175, 80, 0.3); padding: 15px; border-radius: 8px; margin: 20px 0; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h2>✅ Connexion réussie !</h2>
+                    <div class="success">
+                        <p>Authentification transférée vers l'extension.</p>
+                        <p><small>Cette page va se fermer automatiquement.</small></p>
+                    </div>
+                </div>
+                <script>
+                    // Transférer les données vers l'extension via l'URL
+                    window.location.href = window.location.href;
+                    // Auto-fermeture
+                    setTimeout(() => window.close(), 2000);
+                </script>
+            </body>
+            </html>
+        `);
+    } else {
+        res.redirect('/auth/extension');
+    }
 });
 
 // Middleware d'authentification JWT
