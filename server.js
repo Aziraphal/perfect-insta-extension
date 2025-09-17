@@ -204,12 +204,12 @@ app.post('/api/debug-user', async (req, res) => {
 
 // Route simplifiée pour extension (nouvel approche)
 app.get('/auth/extension', (req, res, next) => {
-    // Stocker un marqueur pour identifier le callback extension
-    req.session.extension_auth = true;
+    // Passer un paramètre state pour identifier l'extension
     console.log('🔗 Authentification extension initiée');
 
     passport.authenticate('google', {
-        scope: ['profile', 'email']
+        scope: ['profile', 'email'],
+        state: 'extension_auth'
     })(req, res, next);
 });
 
@@ -242,8 +242,11 @@ app.get('/auth/google/callback',
 
             console.log('✅ JWT généré pour:', req.user.email);
 
-            // Vérifier si c'est une authentification extension
-            if (req.session.extension_auth) {
+            // Vérifier si c'est une authentification extension via le paramètre state
+            const state = req.query.state;
+            console.log('🔍 Paramètre state reçu:', state);
+
+            if (state === 'extension_auth') {
                 // Redirection simple avec paramètres URL pour l'extension
                 const userEncoded = encodeURIComponent(JSON.stringify({
                     id: req.user.id,
@@ -255,9 +258,6 @@ app.get('/auth/google/callback',
 
                 const successUrl = `https://perfect-insta-extension-production.up.railway.app/auth/success?success=true&token=${token}&user=${userEncoded}`;
                 console.log('🔗 Redirection extension vers:', successUrl);
-
-                // Nettoyer la session
-                req.session.extension_auth = null;
 
                 res.redirect(successUrl);
                 return;
