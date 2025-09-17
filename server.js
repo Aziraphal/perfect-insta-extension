@@ -939,6 +939,169 @@ EXIGENCES QUALITÉ :
 }
 
 // =============================================================================
+// PAGE POLITIQUE DE CONFIDENTIALITÉ
+// =============================================================================
+
+app.get('/privacy', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Politique de confidentialité - Perfect Insta Post</title>
+            <style>
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background: #fafafa;
+                }
+                .container {
+                    background: white;
+                    padding: 40px;
+                    border-radius: 12px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                h1 {
+                    color: #2c3e50;
+                    border-bottom: 3px solid #3498db;
+                    padding-bottom: 10px;
+                }
+                h2 {
+                    color: #34495e;
+                    margin-top: 30px;
+                    border-left: 4px solid #3498db;
+                    padding-left: 15px;
+                }
+                .last-updated {
+                    background: #ecf0f1;
+                    padding: 10px;
+                    border-radius: 5px;
+                    font-size: 14px;
+                    margin-bottom: 20px;
+                }
+                .contact-info {
+                    background: #e8f4fd;
+                    padding: 15px;
+                    border-radius: 8px;
+                    margin-top: 20px;
+                }
+                ul {
+                    padding-left: 20px;
+                }
+                li {
+                    margin-bottom: 8px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>📋 Politique de confidentialité</h1>
+                <div class="last-updated">
+                    <strong>Dernière mise à jour :</strong> 17 septembre 2025
+                </div>
+
+                <h2>1. Informations collectées</h2>
+                <p>Perfect Insta Post collecte les informations suivantes :</p>
+                <ul>
+                    <li><strong>Informations de compte Google :</strong> Nom, adresse email, photo de profil (via Google OAuth)</li>
+                    <li><strong>Images uploadées :</strong> Photos que vous soumettez pour analyse (temporairement traitées, non stockées)</li>
+                    <li><strong>Données d'utilisation :</strong> Nombre de posts générés, plan d'abonnement (Free/Pro)</li>
+                    <li><strong>Données de paiement :</strong> Gérées exclusivement par Stripe (aucune information bancaire stockée sur nos serveurs)</li>
+                </ul>
+
+                <h2>2. Utilisation des données</h2>
+                <p>Vos données sont utilisées pour :</p>
+                <ul>
+                    <li>Authentifier votre accès à l'extension</li>
+                    <li>Générer du contenu Instagram personnalisé via l'IA GPT-4o Vision</li>
+                    <li>Gérer votre plan d'abonnement (Free/Pro)</li>
+                    <li>Suivre votre utilisation mensuelle (limite de posts)</li>
+                    <li>Améliorer nos services</li>
+                </ul>
+
+                <h2>3. Protection des images</h2>
+                <p><strong>Sécurité maximale garantie :</strong></p>
+                <ul>
+                    <li>❌ <strong>Aucune image n'est stockée</strong> sur nos serveurs</li>
+                    <li>🔄 Images traitées temporairement en mémoire uniquement</li>
+                    <li>🗑️ Suppression automatique après traitement IA</li>
+                    <li>🔒 Transmission sécurisée via HTTPS</li>
+                    <li>🎯 Analyse par OpenAI GPT-4o Vision (soumis à leurs conditions)</li>
+                </ul>
+
+                <h2>4. Partage des données</h2>
+                <p>Vos données ne sont <strong>jamais vendues</strong>. Elles peuvent être partagées uniquement avec :</p>
+                <ul>
+                    <li><strong>OpenAI :</strong> Pour l'analyse d'images et la génération de contenu</li>
+                    <li><strong>Stripe :</strong> Pour le traitement des paiements Pro</li>
+                    <li><strong>Google :</strong> Pour l'authentification OAuth</li>
+                </ul>
+
+                <h2>5. Cookies et stockage</h2>
+                <ul>
+                    <li><strong>Cookies d'authentification :</strong> JWT pour maintenir votre session</li>
+                    <li><strong>Stockage local :</strong> Préférences d'extension dans Chrome</li>
+                    <li><strong>Durée de session :</strong> 7 jours maximum</li>
+                </ul>
+
+                <h2>6. Vos droits (RGPD)</h2>
+                <p>Conformément au RGPD, vous avez le droit de :</p>
+                <ul>
+                    <li><strong>Accès :</strong> Consulter vos données personnelles</li>
+                    <li><strong>Rectification :</strong> Corriger des informations incorrectes</li>
+                    <li><strong>Suppression :</strong> Supprimer votre compte et toutes vos données</li>
+                    <li><strong>Portabilité :</strong> Exporter vos données</li>
+                    <li><strong>Opposition :</strong> Vous opposer au traitement</li>
+                </ul>
+
+                <h2>7. Sécurité</h2>
+                <ul>
+                    <li>🔐 Authentification Google OAuth 2.0</li>
+                    <li>🛡️ Chiffrement HTTPS pour toutes les communications</li>
+                    <li>🗄️ Base de données PostgreSQL sécurisée</li>
+                    <li>⚡ Serveurs hébergés sur Railway (infrastructure sécurisée)</li>
+                </ul>
+
+                <h2>8. Rétention des données</h2>
+                <ul>
+                    <li><strong>Compte utilisateur :</strong> Conservé tant que vous utilisez l'extension</li>
+                    <li><strong>Images :</strong> Non stockées (suppression immédiate après traitement)</li>
+                    <li><strong>Historique d'utilisation :</strong> 12 mois maximum</li>
+                    <li><strong>Suppression automatique :</strong> Comptes inactifs après 2 ans</li>
+                </ul>
+
+                <h2>9. Modifications</h2>
+                <p>Cette politique peut être mise à jour. Les changements importants vous seront notifiés via l'extension.</p>
+
+                <h2>10. Base légale</h2>
+                <p>Le traitement de vos données est basé sur :</p>
+                <ul>
+                    <li><strong>Consentement :</strong> Vous acceptez lors de la connexion Google</li>
+                    <li><strong>Contrat :</strong> Nécessaire pour fournir nos services</li>
+                    <li><strong>Intérêt légitime :</strong> Amélioration du service</li>
+                </ul>
+
+                <div class="contact-info">
+                    <h2>📧 Contact</h2>
+                    <p>Pour toute question concernant vos données personnelles :</p>
+                    <ul>
+                        <li><strong>Email :</strong> privacy@perfect-insta-post.com</li>
+                        <li><strong>Support :</strong> Via l'extension Chrome</li>
+                        <li><strong>Délai de réponse :</strong> 72 heures maximum</li>
+                    </ul>
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+});
+
+// =============================================================================
 // DÉMARRAGE SERVEUR
 // =============================================================================
 
