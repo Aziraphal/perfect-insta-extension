@@ -486,10 +486,18 @@ app.get('/auth/success', (req, res) => {
                     </div>
                 </div>
                 <script>
-                    // Transférer les données vers l'extension via l'URL
-                    window.location.href = window.location.href;
-                    // Auto-fermeture
-                    setTimeout(() => window.close(), 2000);
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const token = urlParams.get('token');
+                    const user = urlParams.get('user');
+
+                    console.log('Token reçu:', token);
+                    console.log('User reçu:', user);
+
+                    // Attendre plus longtemps pour que l'extension puisse traiter
+                    setTimeout(() => {
+                        console.log('Fermeture de la page...');
+                        window.close();
+                    }, 5000); // 5 secondes au lieu de 2
                 </script>
             </body>
             </html>
