@@ -802,6 +802,29 @@ CONFIGURATION UTILISATEUR :
 - Lieu/contexte: ${config.location || 'non spécifié'}
 - Contexte supplémentaire: ${config.context || 'aucun'}
 
+INSTRUCTIONS SPÉCIFIQUES PAR STYLE :
+${config.captionStyle === 'engaging' ? `
+🎯 STYLE ENGAGEANT REQUIS :
+- OBLIGATOIRE : Termine la légende par une question directe à l'audience
+- Utilise des phrases courtes et percutantes
+- Interpelle directement le lecteur avec "tu", "vous", "toi"
+- Crée de l'interaction : "Et vous ?", "Qu'en pensez-vous ?", "Dites-moi en commentaire"
+- Évite les descriptions poétiques longues
+- Privilégie l'action et la participation
+` : ''}
+${config.captionStyle === 'storytelling' ? `
+📖 STYLE STORYTELLING :
+- Raconte une histoire liée à l'image
+- Utilise un début, un développement, une chute
+- Crée de l'émotion et de la connexion
+` : ''}
+${config.captionStyle === 'motivational' ? `
+🚀 STYLE MOTIVATIONNEL :
+- Inclus une citation ou phrase inspirante
+- Relie l'image à un message positif
+- Encourage l'action et le dépassement
+` : ''}
+
 STRATÉGIE HASHTAGS (CRITIQUE) :
 Génère EXACTEMENT 20-25 hashtags avec cette répartition :
 - 6-8 hashtags TRÈS POPULAIRES (1M+ posts) : les plus génériques du domaine
