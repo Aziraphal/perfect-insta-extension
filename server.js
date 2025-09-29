@@ -210,14 +210,21 @@ app.post('/api/debug-user', async (req, res) => {
 // =============================================================================
 
 // Route simplifiée pour extension (nouvel approche)
-app.get('/auth/extension', (req, res, next) => {
-    // Passer un paramètre state pour identifier l'extension
+app.get('/auth/extension', (req, res) => {
     console.log('🔗 Authentification extension initiée');
 
-    passport.authenticate('google', {
-        scope: ['profile', 'email'],
-        state: 'extension_auth'
-    })(req, res, next);
+    // Construire l'URL OAuth manuellement pour forcer les scopes
+    const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' +
+        `client_id=${encodeURIComponent(process.env.GOOGLE_CLIENT_ID)}&` +
+        `redirect_uri=${encodeURIComponent(callbackURL)}&` +
+        `response_type=code&` +
+        `scope=${encodeURIComponent('openid profile email')}&` + // Forcer explicitement les scopes
+        `state=extension_auth&` +
+        `access_type=offline&` +
+        `prompt=consent`;
+
+    console.log('🔗 Redirection vers:', googleAuthUrl);
+    res.redirect(googleAuthUrl);
 });
 
 // Route de connexion Google
