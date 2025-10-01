@@ -460,6 +460,89 @@ app.post('/auth/logout', (req, res) => {
     });
 });
 
+// Route pour chrome.identity.getAuthToken() - Nouvelle approche
+app.post('/auth/google-token', async (req, res) => {
+    try {
+        const { googleToken } = req.body;
+
+        if (!googleToken) {
+            return res.status(400).json({
+                success: false,
+                error: 'Token Google manquant'
+            });
+        }
+
+        console.log('🔐 Validation token Google depuis chrome.identity...');
+
+        // Valider le token Google et récupérer les infos utilisateur
+        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: {
+                'Authorization': `Bearer ${googleToken}`
+            }
+        });
+
+        if (!userInfoResponse.ok) {
+            throw new Error('Token Google invalide');
+        }
+
+        const googleUser = await userInfoResponse.json();
+        console.log('✅ Utilisateur Google validé:', googleUser.email);
+
+        // Chercher ou créer l'utilisateur dans la DB
+        let user = await prisma.user.findUnique({
+            where: { googleId: googleUser.id }
+        });
+
+        if (!user) {
+            // Créer nouvel utilisateur
+            user = await prisma.user.create({
+                data: {
+                    googleId: googleUser.id,
+                    email: googleUser.email,
+                    name: googleUser.name,
+                    plan: 'free',
+                    postsThisMonth: 0
+                }
+            });
+            console.log('🆕 Nouvel utilisateur créé:', user.email);
+        } else {
+            console.log('✅ Utilisateur existant:', user.email);
+        }
+
+        // Générer JWT
+        const jwtToken = jwt.sign(
+            {
+                userId: user.id,
+                email: user.email,
+                plan: user.plan
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        console.log('✅ JWT généré pour:', user.email);
+
+        res.json({
+            success: true,
+            token: jwtToken,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                plan: user.plan,
+                postsThisMonth: user.postsThisMonth
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Erreur auth/google-token:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 // Page de succès pour l'extension (nouvelle approche)
 app.get('/auth/success', (req, res) => {
     const { success, token, user, error } = req.query;
