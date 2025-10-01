@@ -9,6 +9,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const jwt = require('jsonwebtoken');
 const session = require('express-session');
 const OpenAI = require('openai');
+const multer = require('multer');
 
 const app = express();
 const prisma = new PrismaClient();
@@ -28,6 +29,12 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '50mb' })); // Augmenter la limite pour les images
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Configuration multer pour upload en mémoire
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB max
+});
 
 // Configuration session pour Passport
 app.use(session({
@@ -572,10 +579,8 @@ app.get('/api/user/me', authenticateJWT, (req, res) => {
 });
 
 // Route pour générer un post (protégée)
-app.post('/api/generate-post', authenticateJWT, async (req, res) => {
+app.post('/api/generate-post', authenticateJWT, upload.single('image'), async (req, res) => {
     try {
-        const { imageData, config } = req.body;
-
         // Vérifier les quotas utilisateur
         const user = req.user;
         const maxPosts = user.plan === 'pro' ? 50 : 5;
@@ -592,6 +597,27 @@ app.post('/api/generate-post', authenticateJWT, async (req, res) => {
             });
         }
 
+        // Extraire l'image et la config depuis FormData
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                error: 'Aucune image fournie'
+            });
+        }
+
+        const imageData = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+        const config = {
+            postType: req.body.postType || 'lifestyle',
+            tone: req.body.tone || 'casual',
+            captionLength: req.body.captionLength || 'medium',
+            captionStyle: req.body.captionStyle || 'engaging',
+            location: req.body.location || '',
+            context: req.body.context || ''
+        };
+
+        console.log('📸 Image reçue:', req.file.mimetype, (req.file.size / 1024).toFixed(0) + 'KB');
+        console.log('⚙️ Config:', config);
+
         // Générer le contenu avec OpenAI GPT-4 Vision
         const content = await generateInstagramPost(imageData, config);
 
@@ -605,7 +631,9 @@ app.post('/api/generate-post', authenticateJWT, async (req, res) => {
 
         res.json({
             success: true,
-            content: content,
+            caption: content.caption,
+            hashtags: content.hashtags,
+            suggestions: content.suggestions,
             user: {
                 id: updatedUser.id,
                 email: updatedUser.email,
@@ -865,7 +893,7 @@ EXIGENCES QUALITÉ :
                         {
                             type: "image_url",
                             image_url: {
-                                url: `data:image/jpeg;base64,${imageData}`,
+                                url: imageData, // imageData est déjà en format data:image/...;base64,...
                                 detail: "high"
                             }
                         }
