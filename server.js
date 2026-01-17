@@ -14,6 +14,9 @@ const multer = require('multer');
 const app = express();
 const prisma = new PrismaClient();
 
+// Map pour stocker les abonnements (temporaire, utiliser Prisma en prod)
+const subscriptions = new Map();
+
 // Initialiser OpenAI
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -1078,6 +1081,292 @@ EXIGENCES QUALITÉ :
         };
     }
 }
+
+// =============================================================================
+// ROUTES D'ANALYSE AVANCÉES (Perfect Insta Optimizer)
+// =============================================================================
+
+// Route d'analyse d'image complète
+app.post('/api/analyze', authenticateJWT, upload.single('image'), async (req, res) => {
+    try {
+        const user = req.user;
+        const language = req.body.language || 'French';
+
+        if (!req.file && !req.body.image) {
+            return res.status(400).json({ success: false, error: 'Image requise' });
+        }
+
+        const imageData = req.file
+            ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`
+            : req.body.image;
+
+        console.log(`🔍 Analyse image pour ${user.email}...`);
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{
+                role: "system",
+                content: `Tu es un expert en analyse de photos Instagram. Analyse l'image et retourne un JSON structuré.
+${language === 'French' ? 'Réponds en FRANÇAIS.' : language === 'Spanish' ? 'Responde en ESPAÑOL.' : 'Respond in English.'}
+
+Format JSON requis:
+{
+  "compositionScore": number (0-100),
+  "lightingScore": number (0-100),
+  "aestheticVibe": string,
+  "colorPalette": string[] (codes hex),
+  "improvements": string[] (3 conseils),
+  "viralPotentialScore": number (0-100),
+  "bestTimeToPost": string,
+  "dominantEmotion": string,
+  "suggestedEditingStyle": string,
+  "recommendedFormat": "Reel" | "Carousel" | "Static Post",
+  "formatAdvice": string,
+  "detectedSubject": string,
+  "subjectAdvice": string
+}`
+            }, {
+                role: "user",
+                content: [
+                    { type: "image_url", image_url: { url: imageData, detail: "high" } },
+                    { type: "text", text: "Analyse cette image pour l'optimisation Instagram. Sois critique et utile." }
+                ]
+            }],
+            response_format: { type: "json_object" },
+            max_tokens: 2000
+        });
+
+        const analysis = JSON.parse(response.choices[0].message.content);
+        console.log(`✅ Analyse terminée pour ${user.email}`);
+
+        res.json({ success: true, data: analysis });
+
+    } catch (error) {
+        console.error('❌ Erreur analyse:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Route génération d'idées de contenu
+app.post('/api/ideas', authenticateJWT, upload.single('image'), async (req, res) => {
+    try {
+        const language = req.body.language || 'French';
+
+        if (!req.file && !req.body.image) {
+            return res.status(400).json({ success: false, error: 'Image requise' });
+        }
+
+        const imageData = req.file
+            ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`
+            : req.body.image;
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{
+                role: "system",
+                content: `Tu es un expert en stratégie de contenu Instagram.
+${language === 'French' ? 'Réponds en FRANÇAIS.' : 'Respond in English.'}
+
+Format JSON requis:
+{
+  "ideas": [
+    { "type": "Motivational" | "Educational" | "Lifestyle" | "Trendy", "title": string, "description": string }
+  ]
+}
+Retourne exactement 3 idées.`
+            }, {
+                role: "user",
+                content: [
+                    { type: "image_url", image_url: { url: imageData, detail: "high" } },
+                    { type: "text", text: "Propose 3 angles de contenu distincts pour cette photo afin de maximiser l'engagement Instagram." }
+                ]
+            }],
+            response_format: { type: "json_object" },
+            max_tokens: 1000
+        });
+
+        const result = JSON.parse(response.choices[0].message.content);
+        res.json({ success: true, data: result.ideas });
+
+    } catch (error) {
+        console.error('❌ Erreur ideas:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Route prédiction de performance
+app.post('/api/predict', authenticateJWT, async (req, res) => {
+    try {
+        const { image, caption, hashtags, niche, format, language = 'French' } = req.body;
+
+        if (!image) {
+            return res.status(400).json({ success: false, error: 'Image requise' });
+        }
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{
+                role: "system",
+                content: `Tu es un expert de l'algorithme Instagram.
+${language === 'French' ? 'Réponds en FRANÇAIS.' : 'Respond in English.'}
+
+Format JSON requis:
+{
+  "score": number (0-100),
+  "rating": string,
+  "reasoning": string,
+  "warnings": string[]
+}`
+            }, {
+                role: "user",
+                content: [
+                    { type: "image_url", image_url: { url: image, detail: "high" } },
+                    { type: "text", text: `Prédit la performance Instagram de ce post. Niche: ${niche || 'General'}, Format: ${format || 'Post'}, Caption: "${caption || 'N/A'}", Hashtags: ${(hashtags || []).join(', ')}` }
+                ]
+            }],
+            response_format: { type: "json_object" },
+            max_tokens: 1000
+        });
+
+        const result = JSON.parse(response.choices[0].message.content);
+        res.json({ success: true, data: result });
+
+    } catch (error) {
+        console.error('❌ Erreur predict:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Route génération de hooks viraux
+app.post('/api/hooks', authenticateJWT, async (req, res) => {
+    try {
+        const { caption, language = 'French' } = req.body;
+
+        if (!caption) {
+            return res.status(400).json({ success: false, error: 'Caption requise' });
+        }
+
+        const firstLine = caption.split('\n')[0];
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{
+                role: "system",
+                content: `Tu es un expert en hooks viraux Instagram.
+${language === 'French' ? 'Réponds en FRANÇAIS.' : 'Respond in English.'}
+
+Format JSON requis:
+{
+  "hooks": string[] (exactement 3 hooks)
+}`
+            }, {
+                role: "user",
+                content: `Génère 3 hooks viraux pour remplacer cette première ligne faible: "${firstLine}". Types: 1) Négatif/Controversé 2) Curiosité 3) Déclaration forte.`
+            }],
+            response_format: { type: "json_object" },
+            max_tokens: 500
+        });
+
+        const result = JSON.parse(response.choices[0].message.content);
+        res.json({ success: true, data: result.hooks });
+
+    } catch (error) {
+        console.error('❌ Erreur hooks:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Route génération de CTAs
+app.post('/api/ctas', authenticateJWT, async (req, res) => {
+    try {
+        const { goal, aestheticContext, language = 'French' } = req.body;
+
+        if (!goal) {
+            return res.status(400).json({ success: false, error: 'Goal requis' });
+        }
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{
+                role: "system",
+                content: `Tu es un expert en Call-To-Actions Instagram.
+${language === 'French' ? 'Réponds en FRANÇAIS.' : 'Respond in English.'}
+
+Format JSON requis:
+{
+  "ctas": string[] (exactement 4 CTAs)
+}`
+            }, {
+                role: "user",
+                content: `Génère 4 CTAs Instagram percutants pour l'objectif: "${goal}".${aestheticContext ? ` Vibe du post: "${aestheticContext}".` : ''}`
+            }],
+            response_format: { type: "json_object" },
+            max_tokens: 500
+        });
+
+        const result = JSON.parse(response.choices[0].message.content);
+        res.json({ success: true, data: result.ctas });
+
+    } catch (error) {
+        console.error('❌ Erreur ctas:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Route génération de captions avancées
+app.post('/api/captions', authenticateJWT, upload.single('image'), async (req, res) => {
+    try {
+        const { tone, language = 'French', analysisContext } = req.body;
+
+        if (!req.file && !req.body.image) {
+            return res.status(400).json({ success: false, error: 'Image requise' });
+        }
+
+        const imageData = req.file
+            ? `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`
+            : req.body.image;
+
+        let contextInfo = '';
+        if (analysisContext) {
+            const ctx = typeof analysisContext === 'string' ? JSON.parse(analysisContext) : analysisContext;
+            contextInfo = `Contexte: Vibe "${ctx.aestheticVibe}", couleurs: ${(ctx.colorPalette || []).join(', ')}, émotion: ${ctx.dominantEmotion}.`;
+        }
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{
+                role: "system",
+                content: `Tu es un expert copywriter Instagram.
+${language === 'French' ? 'Réponds en FRANÇAIS.' : 'Respond in English.'}
+
+Format JSON requis:
+{
+  "captions": string[] (5 captions différentes),
+  "hashtags": string[],
+  "hashtagAnalysis": [
+    { "tag": string, "competitionScore": number, "viralityScore": number, "relevanceScore": number, "reachCategory": "Low" | "Mid" | "High" }
+  ],
+  "locationIdea": string
+}`
+            }, {
+                role: "user",
+                content: [
+                    { type: "image_url", image_url: { url: imageData, detail: "high" } },
+                    { type: "text", text: `Génère des captions Instagram et une stratégie hashtags pour cette image. Ton: ${tone || 'Engaging'}. ${contextInfo}` }
+                ]
+            }],
+            response_format: { type: "json_object" },
+            max_tokens: 3000
+        });
+
+        const result = JSON.parse(response.choices[0].message.content);
+        res.json({ success: true, data: result });
+
+    } catch (error) {
+        console.error('❌ Erreur captions:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 // =============================================================================
 // PAGE POLITIQUE DE CONFIDENTIALITÉ
