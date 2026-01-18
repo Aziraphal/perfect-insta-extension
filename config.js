@@ -15,10 +15,14 @@ const APP_CONFIG = {
     backend: {
         baseUrl: 'https://perfect-insta-extension-production.up.railway.app',
         endpoints: {
-            // Auth
+            // Auth (OAuth flow)
+            auth: '/auth/google',
+
+            // Auth (API)
             login: '/api/auth/google',
             logout: '/api/auth/logout',
             verify: '/api/auth/verify',
+            userMe: '/api/user/me',
 
             // Core
             generatePost: '/api/generate-post',
