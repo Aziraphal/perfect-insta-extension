@@ -632,14 +632,14 @@ body::-webkit-scrollbar-thumb:hover {
 
 .collapsible-content {
     overflow: hidden;
-    transition: all var(--transition-normal);
+    max-height: 500px;
+    opacity: 1;
+    transition: max-height var(--transition-normal), opacity var(--transition-normal);
 }
 
 .collapsible-content.collapsed {
     max-height: 0;
     opacity: 0;
-    margin: 0;
-    padding: 0;
 }
 
 /* Pro overlay */

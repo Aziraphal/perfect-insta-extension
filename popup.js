@@ -542,6 +542,52 @@ function setupEventListeners() {
     }
 
     // =============================================================================
+    // BOUTONS UPGRADE PRO
+    // =============================================================================
+
+    const upgradeButtons = [
+        document.getElementById('upgradeBtn'),
+        document.getElementById('miniUpgradeBtn'),
+        document.getElementById('upgradeFromOverlay')
+    ];
+
+    upgradeButtons.forEach(btn => {
+        if (btn) {
+            btn.addEventListener('click', () => {
+                if (typeof paymentManager !== 'undefined') {
+                    paymentManager.upgradeToPro();
+                } else {
+                    showNotification('Erreur: système de paiement non disponible', 'error');
+                }
+            });
+        }
+    });
+
+    // =============================================================================
+    // OPTIONS AVANCÉES - TOGGLE COLLAPSIBLE
+    // =============================================================================
+
+    const advancedHeader = document.getElementById('advancedHeader');
+    const advancedContent = document.getElementById('advancedContent');
+    const collapseIcon = advancedHeader?.querySelector('.collapse-icon');
+
+    if (advancedHeader && advancedContent) {
+        // Par défaut, afficher ouvert pour les utilisateurs Pro
+        if (AppState.auth.user?.plan === 'pro') {
+            advancedContent.classList.remove('collapsed');
+            collapseIcon?.classList.remove('collapsed');
+        } else {
+            advancedContent.classList.add('collapsed');
+            collapseIcon?.classList.add('collapsed');
+        }
+
+        advancedHeader.addEventListener('click', () => {
+            const isCollapsed = advancedContent.classList.toggle('collapsed');
+            collapseIcon?.classList.toggle('collapsed', isCollapsed);
+        });
+    }
+
+    // =============================================================================
     // PHASE 3 : NOUVELLES FONCTIONNALITÉS
     // =============================================================================
 
