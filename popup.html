@@ -22,6 +22,7 @@
                     <span class="usage-text" id="usageText">0/5 posts ce mois</span>
                     <button class="upgrade-btn" id="upgradeBtn" hidden>Upgrade Pro</button>
                 </div>
+                <button class="history-btn" id="historyBtn" title="Historique">📜</button>
                 <button class="logout-btn" id="logoutBtn">⚙️</button>
             </div>
         </header>
@@ -195,6 +196,35 @@
                     <button id="copyBtn" class="copy-btn">📋 Copier tout</button>
                     <button id="newPostBtn" class="new-post-btn">🔄 Nouveau post</button>
                 </div>
+                <div class="extra-actions">
+                    <button id="exportPngBtn" class="extra-action-btn" title="Exporter en PNG">
+                        📥 Export PNG
+                    </button>
+                    <button id="gridPreviewBtn" class="extra-action-btn" title="Aperçu du feed">
+                        📱 Grid Preview
+                    </button>
+                    <button id="saveHistoryBtn" class="extra-action-btn" title="Sauvegarder">
+                        💾 Sauvegarder
+                    </button>
+                </div>
+            </section>
+
+            <!-- Section Historique -->
+            <section class="history-section" id="historySection" hidden>
+                <div class="history-header">
+                    <h3>📜 Historique</h3>
+                    <div class="history-actions">
+                        <button id="clearHistoryBtn" class="history-clear-btn" title="Vider l'historique">
+                            🗑️
+                        </button>
+                        <button id="closeHistoryBtn" class="history-close-btn" onclick="HistoryUI.toggle()">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+                <div class="history-list" id="historyList">
+                    <!-- Rempli dynamiquement -->
+                </div>
             </section>
 
             <!-- Section Connexion Google OAuth -->
@@ -245,6 +275,9 @@
     <script src="freemium.js"></script>
     <script src="payment.js"></script>
     <script src="analytics.js"></script>
+    <script src="history.js"></script>
+    <script src="export.js"></script>
+    <script src="gridPreview.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>

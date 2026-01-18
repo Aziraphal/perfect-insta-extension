@@ -52,7 +52,12 @@ const elements = {
     userPlan: document.getElementById('userPlan'),
     usageText: document.getElementById('usageText'),
     upgradeBtn: document.getElementById('upgradeBtn'),
-    logoutBtn: document.getElementById('logoutBtn')
+    logoutBtn: document.getElementById('logoutBtn'),
+    // Nouveaux éléments Phase 3
+    exportPngBtn: document.getElementById('exportPngBtn'),
+    gridPreviewBtn: document.getElementById('gridPreviewBtn'),
+    saveHistoryBtn: document.getElementById('saveHistoryBtn'),
+    historyBtn: document.getElementById('historyBtn')
 };
 
 // =============================================================================
@@ -531,6 +536,53 @@ function setupEventListeners() {
         elements.newPostBtn.addEventListener('click', resetApp);
     }
 
+    // =============================================================================
+    // PHASE 3 : NOUVELLES FONCTIONNALITÉS
+    // =============================================================================
+
+    // Export PNG
+    if (elements.exportPngBtn) {
+        elements.exportPngBtn.addEventListener('click', async () => {
+            const data = getCurrentPostData();
+            if (!data.caption && !data.hashtags.length) {
+                showNotification('Générez d\'abord un post avant d\'exporter', 'error');
+                return;
+            }
+            await ExportService.exportAsPNG(data);
+        });
+    }
+
+    // Grid Preview
+    if (elements.gridPreviewBtn) {
+        elements.gridPreviewBtn.addEventListener('click', () => {
+            const imageUrl = elements.previewImage?.src;
+            if (!imageUrl || imageUrl === '') {
+                showNotification('Ajoutez une image pour voir l\'aperçu du feed', 'error');
+                return;
+            }
+            GridPreview.open(imageUrl);
+        });
+    }
+
+    // Save to History
+    if (elements.saveHistoryBtn) {
+        elements.saveHistoryBtn.addEventListener('click', async () => {
+            const data = getCurrentPostData();
+            if (!data.caption && !data.hashtags.length) {
+                showNotification('Générez d\'abord un post avant de sauvegarder', 'error');
+                return;
+            }
+
+            // Créer une miniature si une image existe
+            if (data.image) {
+                data.image = await HistoryDB.createThumbnail(data.image);
+            }
+
+            await HistoryDB.save(data);
+            showNotification('Post sauvegardé dans l\'historique', 'success');
+        });
+    }
+
     console.log('🔧 Event listeners configurés');
 }
 
@@ -553,9 +605,56 @@ function setLoading(loading) {
 }
 
 function showNotification(message, type = 'info') {
-    // Implémentation simple avec alert pour l'instant
-    // TODO: Améliorer avec une notification toast personnalisée
-    alert(message);
+    // Supprimer les notifications existantes
+    const existingToast = document.querySelector('.toast-notification');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    // Créer la notification toast
+    const toast = document.createElement('div');
+    toast.className = `toast-notification toast-${type}`;
+
+    const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+    toast.innerHTML = `
+        <span class="toast-icon">${icon}</span>
+        <span class="toast-message">${message}</span>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Animation d'entrée
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+
+    // Auto-dismiss après 3 secondes
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Récupérer les données du post actuel
+function getCurrentPostData() {
+    const hashtags = Array.from(elements.hashtagsContainer?.children || [])
+        .map(span => span.textContent);
+
+    const suggestions = Array.from(elements.suggestionsList?.children || [])
+        .map(li => li.textContent);
+
+    return {
+        image: elements.previewImage?.src || null,
+        caption: elements.generatedCaption?.value || '',
+        hashtags: hashtags,
+        suggestions: suggestions,
+        postType: elements.postType?.value,
+        tone: elements.tone?.value,
+        location: elements.location?.value,
+        context: elements.context?.value,
+        captionLength: elements.captionLength?.value,
+        captionStyle: elements.captionStyle?.value
+    };
 }
 
 console.log('🎯 Perfect Insta Post popup initialisé');
