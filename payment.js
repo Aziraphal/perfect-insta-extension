@@ -1,10 +1,11 @@
 // Système de paiement Stripe pour Perfect Insta Post
 // Gère les upgrades vers Pro et la gestion des abonnements
+// Utilise APP_CONFIG depuis config.js
 
 class PaymentManager {
     constructor() {
-        this.STRIPE_PUBLIC_KEY = 'pk_live_51RmKrBFRRcxMaxXVE3oGKHhRq5Zkkrr4RCNu0Fpc4rgRRqdRYwVKIqXZX8N0KnDoslD88U4EEt8DrDgyR69om0Jm003ZWnqwl2'; // Remplace par ta vraie clé publique
-        this.BACKEND_URL = 'https://perfect-insta-extension-production.up.railway.app/api';
+        this.STRIPE_PUBLIC_KEY = 'pk_live_51RmKrBFRRcxMaxXVE3oGKHhRq5Zkkrr4RCNu0Fpc4rgRRqdRYwVKIqXZX8N0KnDoslD88U4EEt8DrDgyR69om0Jm003ZWnqwl2';
+        this.BACKEND_URL = APP_CONFIG.backend.baseUrl + '/api';
         this.stripe = null;
 
         this.PRICES = {

@@ -1,17 +1,15 @@
 // =============================================================================
 // PERFECT INSTA POST - SERVICE WORKER (BACKGROUND.JS)
 // Gestion de l'authentification Google OAuth avec chrome.identity
+// Utilise APP_CONFIG depuis config.js
 // =============================================================================
 
+// Importer la configuration centralisée
+importScripts('config.js');
+
+// Alias pour compatibilité avec l'ancien code
 const CONFIG = {
-    backend: {
-        baseUrl: 'https://perfect-insta-extension-production.up.railway.app',
-        endpoints: {
-            auth: '/auth/google',
-            userMe: '/api/user/me',
-            generatePost: '/api/generate-post'
-        }
-    }
+    backend: APP_CONFIG.backend
 };
 
 // État global du service worker

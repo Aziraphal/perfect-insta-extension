@@ -1,19 +1,8 @@
 // =============================================================================
 // PERFECT INSTA POST - POPUP (NOUVELLE VERSION AVEC SERVICE WORKER)
 // Interface utilisateur qui communique avec background.js
+// Utilise APP_CONFIG depuis config.js
 // =============================================================================
-
-// Configuration et constantes
-const CONFIG = {
-    maxFileSize: 10 * 1024 * 1024, // 10MB
-    supportedFormats: ['image/jpeg', 'image/png', 'image/webp'],
-    backend: {
-        baseUrl: 'https://perfect-insta-extension-production.up.railway.app',
-        endpoints: {
-            generatePost: '/api/generate-post'
-        }
-    }
-};
 
 // État global de l'application
 const AppState = {
@@ -262,12 +251,12 @@ function handleImageUpload(file) {
     }
 
     // Vérifications
-    if (!CONFIG.supportedFormats.includes(file.type)) {
+    if (!APP_CONFIG.isFormatSupported(file.type)) {
         showNotification('Format non supporté. Utilisez JPG, PNG ou WebP.', 'error');
         return;
     }
 
-    if (file.size > CONFIG.maxFileSize) {
+    if (!APP_CONFIG.isFileSizeValid(file.size)) {
         showNotification('Fichier trop volumineux. Maximum 10MB.', 'error');
         return;
     }
@@ -357,7 +346,7 @@ async function generatePostWithBackend(imageData, config) {
     }
 
     try {
-        const response = await fetch(`${CONFIG.backend.baseUrl}${CONFIG.backend.endpoints.generatePost}`, {
+        const response = await fetch(APP_CONFIG.getApiUrl('generatePost'), {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${AppState.auth.jwtToken}`,

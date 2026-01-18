@@ -1,5 +1,6 @@
 // Système d'analytics et de rétention pour Perfect Insta Post
 // Track user behavior, conversion funnel, and implement retention features
+// Utilise APP_CONFIG depuis config.js
 
 class AnalyticsManager {
     constructor() {
@@ -138,7 +139,7 @@ class AnalyticsManager {
             // Dans un vrai déploiement, envoyer à votre service d'analytics
             // Exemple avec un backend personnalisé ou service tiers (Mixpanel, Amplitude, etc.)
 
-            const response = await fetch('https://perfect-insta-extension-production.up.railway.app/api/analytics/batch', {
+            const response = await fetch(`${APP_CONFIG.backend.baseUrl}/api/analytics/batch`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -1,17 +1,13 @@
 {
   "manifest_version": 3,
   "name": "Perfect Insta Post",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Generate perfect Instagram posts from your photos with AI-powered captions and hashtags",
   "permissions": [
     "identity",
     "storage"
   ],
   "host_permissions": [
-    "https://vision.googleapis.com/*",
-    "https://api.openai.com/*",
-    "https://checkout.stripe.com/*",
-    "https://js.stripe.com/*",
     "https://perfect-insta-extension-production.up.railway.app/*"
   ],
   "action": {
@@ -29,7 +25,14 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "https://*.instagram.com/*",
+        "https://*.facebook.com/*",
+        "https://*.twitter.com/*",
+        "https://*.pinterest.com/*",
+        "https://*.unsplash.com/*",
+        "https://*.pexels.com/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_end"
     }
