@@ -2,30 +2,38 @@
 
 > Générez le post Instagram parfait avec l'intelligence artificielle
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Chrome](https://img.shields.io/badge/chrome-extension-yellow.svg)
+![Tests](https://img.shields.io/badge/tests-21%20passing-success.svg)
 
 ## 🎯 Description
 
-Perfect Insta Post est une extension Chrome qui révolutionne la création de contenu Instagram. Grâce à l'intelligence artificielle (OpenAI GPT-3.5 + Google Vision API), elle analyse vos photos et génère automatiquement des légendes engageantes et des hashtags optimisés pour maximiser votre portée et engagement.
+Perfect Insta Post est une extension Chrome qui révolutionne la création de contenu Instagram. Grâce à l'intelligence artificielle (OpenAI GPT-4o), elle analyse vos photos et génère automatiquement des légendes engageantes et des hashtags optimisés pour maximiser votre portée et engagement.
 
 ### ✨ Fonctionnalités principales
 
-- 🔍 **Analyse d'image intelligente** : Reconnaissance automatique du contenu via Google Vision API
+- 🔍 **Analyse d'image intelligente** : Reconnaissance automatique du contenu via OpenAI GPT-4o Vision
 - 📝 **Génération de légendes** : Textes engageants adaptés à votre ton et style
 - #️⃣ **Hashtags optimisés** : Mix stratégique de hashtags populaires, moyens et de niche
 - 🌍 **Géolocalisation** : Hashtags géolocalisés automatiques (Pro)
 - 🎨 **Personnalisation avancée** : Contexte, ton, longueur, style (Pro)
 - 💰 **Modèle freemium** : 5 posts gratuits/mois, 50 avec Pro
 
+### 🆕 Nouveautés v1.1.0
+
+- 📜 **Historique local** : Sauvegardez et retrouvez vos posts générés
+- 📥 **Export PNG** : Téléchargez un rapport visuel de votre post
+- 📱 **Grid Preview** : Visualisez votre photo dans un feed Instagram simulé
+- 🎨 **UI Modernisée** : Thème sombre avec gradients Instagram
+- 🔒 **Sécurité renforcée** : Permissions minimales, API sécurisée
+
 ## 🚀 Installation
 
 ### Prérequis
 
 - Google Chrome (version 88+)
-- Clé API OpenAI (https://platform.openai.com/api-keys)
-- Clé API Google Vision (https://cloud.google.com/vision/docs)
+- Node.js 18+ (pour le backend)
 
 ### Installation locale
 
@@ -48,25 +56,46 @@ Perfect Insta Post est une extension Chrome qui révolutionne la création de co
 
 ## ⚙️ Configuration
 
-### 1. Clés API
+### Variables d'environnement
 
-Au premier lancement, l'extension vous demandera :
-
-- **Clé OpenAI** : Pour la génération de contenu
-- **Clé Google Vision** : Pour l'analyse d'images
-
-### 2. Backend (optionnel - pour paiements)
-
-Si vous voulez activer les paiements Stripe :
+Créez un fichier `.env` à partir de `.env.example` :
 
 ```bash
-# Variables d'environnement
-STRIPE_SECRET_KEY=sk_live_votre_cle
-STRIPE_PRICE_ID=price_votre_price_id
-NODE_ENV=production
+cp .env.example .env
+```
 
-# Démarrer le serveur
+Variables requises :
+- `OPENAI_API_KEY` : Clé API OpenAI pour GPT-4o Vision
+- `DATABASE_URL` : URL PostgreSQL (Supabase recommandé)
+- `JWT_SECRET` : Secret pour les tokens JWT
+- `GOOGLE_CLIENT_ID` : ID client Google OAuth
+- `GOOGLE_CLIENT_SECRET` : Secret client Google OAuth
+- `STRIPE_SECRET_KEY` : Clé secrète Stripe (pour les paiements)
+
+### Démarrer le backend
+
+```bash
+# Installation des dépendances
+npm install
+
+# Générer le client Prisma
+npx prisma generate
+
+# Démarrer en développement
+npm run dev
+
+# Démarrer en production
 npm start
+```
+
+## 🧪 Tests
+
+```bash
+# Exécuter les tests
+npm test
+
+# Mode watch (relance auto)
+npm run test:watch
 ```
 
 ## 📱 Utilisation
