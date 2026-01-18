@@ -239,12 +239,14 @@ app.get('/auth/extension', (req, res) => {
 
 // Route de connexion Google
 app.get('/auth/google', (req, res, next) => {
-    // Stocker le redirect_uri pour le callback
-    req.session.redirect_uri = req.query.redirect_uri;
-    console.log('📍 Redirect URI stocké:', req.query.redirect_uri);
+    // Encoder le redirect_uri dans le state (plus fiable que les sessions pour les extensions)
+    const redirectUri = req.query.redirect_uri || '';
+    const state = Buffer.from(JSON.stringify({ redirect_uri: redirectUri })).toString('base64');
+    console.log('📍 Redirect URI encodé dans state:', redirectUri);
 
     passport.authenticate('google', {
-        scope: ['profile', 'email']
+        scope: ['profile', 'email'],
+        state: state
     })(req, res, next);
 });
 
@@ -287,8 +289,19 @@ app.get('/auth/google/callback',
                 return;
             }
 
-            // Récupérer le redirect_uri depuis la session
-            const redirectUri = req.session.redirect_uri;
+            // Récupérer le redirect_uri depuis le state parameter (plus fiable que les sessions)
+            let redirectUri = '';
+            try {
+                const state = req.query.state;
+                if (state) {
+                    const decoded = JSON.parse(Buffer.from(state, 'base64').toString('utf8'));
+                    redirectUri = decoded.redirect_uri || '';
+                    console.log('📍 Redirect URI décodé depuis state:', redirectUri);
+                }
+            } catch (e) {
+                console.log('⚠️ Impossible de décoder le state, utilisation de la session');
+                redirectUri = req.session?.redirect_uri || '';
+            }
 
             if (redirectUri && redirectUri.includes('chromiumapp.org')) {
                 // Redirection chrome.identity avec token et user dans le hash
