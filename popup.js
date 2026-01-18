@@ -199,6 +199,18 @@ function updateUIForAuthenticatedUser() {
         }
     }
 
+    // Masquer la promo Pro pour les utilisateurs Pro
+    const proFeaturesPreview = document.getElementById('proFeaturesPreview');
+    if (proFeaturesPreview) {
+        proFeaturesPreview.hidden = AppState.auth.user.plan === 'pro';
+    }
+
+    // Masquer l'overlay Pro dans les options avancées pour les utilisateurs Pro
+    const proOverlay = document.getElementById('proOverlay');
+    if (proOverlay) {
+        proOverlay.hidden = AppState.auth.user.plan === 'pro';
+    }
+
     // Permettre l'upload d'images
     if (elements.uploadArea) {
         elements.uploadArea.style.pointerEvents = 'auto';
