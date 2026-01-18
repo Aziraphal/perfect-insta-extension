@@ -678,6 +678,7 @@ app.get('/api/user/me', authenticateJWT, (req, res) => {
 });
 
 // Route pour générer un post (protégée)
+// Accepte soit FormData avec fichier, soit JSON avec base64
 app.post('/api/generate-post', authenticateJWT, upload.single('image'), async (req, res) => {
     try {
         // Vérifier les quotas utilisateur
@@ -696,25 +697,49 @@ app.post('/api/generate-post', authenticateJWT, upload.single('image'), async (r
             });
         }
 
-        // Extraire l'image et la config depuis FormData
-        if (!req.file) {
+        let imageData;
+        let config;
+
+        // Option 1: FormData avec fichier uploadé
+        if (req.file) {
+            imageData = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+            config = {
+                postType: req.body.postType || 'lifestyle',
+                tone: req.body.tone || 'casual',
+                captionLength: req.body.captionLength || 'medium',
+                captionStyle: req.body.captionStyle || 'engaging',
+                location: req.body.location || '',
+                context: req.body.context || ''
+            };
+        }
+        // Option 2: JSON avec base64 (depuis l'extension Chrome)
+        else if (req.body.imageData) {
+            // L'image peut être en base64 pur ou avec le préfixe data:
+            imageData = req.body.imageData.startsWith('data:')
+                ? req.body.imageData
+                : `data:image/jpeg;base64,${req.body.imageData}`;
+            config = req.body.config || {
+                postType: 'lifestyle',
+                tone: 'casual',
+                captionLength: 'medium',
+                captionStyle: 'engaging',
+                location: '',
+                context: ''
+            };
+        }
+        else {
             return res.status(400).json({
                 success: false,
-                error: 'Aucune image fournie'
+                error: 'Aucune image fournie (ni fichier, ni base64)'
             });
         }
 
-        const imageData = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-        const config = {
-            postType: req.body.postType || 'lifestyle',
-            tone: req.body.tone || 'casual',
-            captionLength: req.body.captionLength || 'medium',
-            captionStyle: req.body.captionStyle || 'engaging',
-            location: req.body.location || '',
-            context: req.body.context || ''
-        };
-
-        console.log('📸 Image reçue:', req.file.mimetype, (req.file.size / 1024).toFixed(0) + 'KB');
+        // Log selon le mode d'envoi
+        if (req.file) {
+            console.log('📸 Image reçue (file):', req.file.mimetype, (req.file.size / 1024).toFixed(0) + 'KB');
+        } else {
+            console.log('📸 Image reçue (base64):', (imageData.length / 1024).toFixed(0) + 'KB encoded');
+        }
         console.log('⚙️ Config:', config);
 
         // Générer le contenu avec OpenAI GPT-4 Vision

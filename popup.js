@@ -373,7 +373,12 @@ async function generatePostWithBackend(imageData, config) {
             elements.usageText.textContent = `${data.user.postsThisMonth}/${data.user.plan === 'free' ? 5 : 50} posts ce mois`;
         }
 
-        return data.content;
+        // Le serveur retourne caption, hashtags, suggestions directement (pas dans content)
+        return {
+            caption: data.caption,
+            hashtags: data.hashtags,
+            suggestions: data.suggestions
+        };
 
     } catch (error) {
         console.error('❌ Erreur génération backend:', error);
