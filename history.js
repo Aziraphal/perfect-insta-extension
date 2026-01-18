@@ -200,6 +200,12 @@ const HistoryUI = {
             historyBtn.addEventListener('click', () => this.toggle());
         }
 
+        // Bouton pour fermer l'historique
+        const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+        if (closeHistoryBtn) {
+            closeHistoryBtn.addEventListener('click', () => this.toggle());
+        }
+
         // Bouton pour vider l'historique
         const clearHistoryBtn = document.getElementById('clearHistoryBtn');
         if (clearHistoryBtn) {

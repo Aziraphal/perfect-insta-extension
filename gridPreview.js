@@ -36,11 +36,11 @@ const GridPreview = {
         const modal = document.createElement('div');
         modal.className = 'grid-preview-modal';
         modal.innerHTML = `
-            <div class="grid-preview-overlay" onclick="GridPreview.close()"></div>
+            <div class="grid-preview-overlay"></div>
             <div class="grid-preview-container">
                 <div class="grid-preview-header">
                     <h3>📱 Aperçu du Feed</h3>
-                    <button class="grid-preview-close" onclick="GridPreview.close()">✕</button>
+                    <button class="grid-preview-close">✕</button>
                 </div>
                 <div class="grid-preview-phone">
                     <div class="phone-notch"></div>
@@ -53,10 +53,10 @@ const GridPreview = {
                     </div>
                 </div>
                 <div class="grid-preview-actions">
-                    <button class="grid-action-btn" onclick="GridPreview.shufflePosition()">
+                    <button class="grid-action-btn shuffle-btn">
                         🔀 Changer position
                     </button>
-                    <button class="grid-action-btn primary" onclick="GridPreview.close()">
+                    <button class="grid-action-btn primary close-btn">
                         ✓ C'est parfait
                     </button>
                 </div>
@@ -65,6 +65,12 @@ const GridPreview = {
 
         document.body.appendChild(modal);
         this.modal = modal;
+
+        // Ajouter les event listeners (CSP-compliant)
+        modal.querySelector('.grid-preview-overlay').addEventListener('click', () => this.close());
+        modal.querySelector('.grid-preview-close').addEventListener('click', () => this.close());
+        modal.querySelector('.shuffle-btn').addEventListener('click', () => this.shufflePosition());
+        modal.querySelector('.close-btn').addEventListener('click', () => this.close());
 
         // Animation d'entrée
         requestAnimationFrame(() => {

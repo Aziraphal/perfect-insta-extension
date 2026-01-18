@@ -321,6 +321,17 @@ async function generatePost() {
         // Afficher la section des résultats
         showSection('resultsSection');
 
+        // Auto-scroll vers les résultats avec animation
+        setTimeout(() => {
+            elements.resultsSection?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }, 100);
+
+        // Notification de succès
+        showNotification('Post généré avec succès !', 'success');
+
         console.log('✅ Post généré avec succès');
 
     } catch (error) {
