@@ -786,6 +786,16 @@ body::-webkit-scrollbar-thumb:hover {
     background: var(--border-light);
 }
 
+.open-insta-btn {
+    background: var(--gradient-ig);
+    color: white;
+}
+
+.open-insta-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-glow);
+}
+
 .save-btn {
     background: var(--primary);
     color: white;
@@ -908,13 +918,19 @@ body::-webkit-scrollbar-thumb:hover {
 
 .action-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     margin-top: 16px;
 }
 
-.action-buttons .copy-btn,
-.action-buttons .new-post-btn {
+.action-buttons button {
     flex: 1;
+    min-width: calc(50% - 5px);
+}
+
+.action-buttons .open-insta-btn {
+    flex: 1 1 100%;
+    order: -1;
 }
 
 /* =============================================================================

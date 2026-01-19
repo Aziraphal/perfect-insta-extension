@@ -184,32 +184,64 @@ function updateUIForAuthenticatedUser() {
     // Masquer la section d'authentification
     hideSection('authSection');
 
+    // Normaliser le plan en minuscules pour la comparaison
+    const userPlan = (AppState.auth.user.plan || 'free').toLowerCase();
+    const isPro = userPlan === 'pro';
+
+    console.log('👤 Plan utilisateur:', userPlan, '| isPro:', isPro);
+
     // Afficher la barre utilisateur
     if (elements.userBar) {
         elements.userBar.hidden = false;
         elements.userEmail.textContent = AppState.auth.user.email;
-        elements.userPlan.textContent = AppState.auth.user.plan.toUpperCase();
-        elements.usageText.textContent = `${AppState.auth.user.postsThisMonth}/${AppState.auth.user.plan === 'free' ? 5 : 50} posts ce mois`;
+        elements.userPlan.textContent = userPlan.toUpperCase();
+        elements.usageText.textContent = `${AppState.auth.user.postsThisMonth}/${isPro ? 50 : 5} posts ce mois`;
 
         // Afficher/masquer le bouton d'upgrade
-        if (AppState.auth.user.plan === 'free') {
-            elements.upgradeBtn.hidden = false;
-        } else {
-            elements.upgradeBtn.hidden = true;
-        }
+        elements.upgradeBtn.hidden = isPro;
     }
 
     // Masquer la promo Pro pour les utilisateurs Pro
     const proFeaturesPreview = document.getElementById('proFeaturesPreview');
     if (proFeaturesPreview) {
-        proFeaturesPreview.hidden = AppState.auth.user.plan === 'pro';
+        proFeaturesPreview.hidden = isPro;
+        proFeaturesPreview.style.display = isPro ? 'none' : '';
     }
 
     // Masquer l'overlay Pro dans les options avancées pour les utilisateurs Pro
     const proOverlay = document.getElementById('proOverlay');
     if (proOverlay) {
-        proOverlay.hidden = AppState.auth.user.plan === 'pro';
+        proOverlay.hidden = isPro;
+        proOverlay.style.display = isPro ? 'none' : '';
     }
+
+    // Activer/désactiver les inputs avancés selon le plan
+    const advancedInputs = [
+        document.getElementById('location'),
+        document.getElementById('context'),
+        document.getElementById('captionLength'),
+        document.getElementById('captionStyle')
+    ];
+
+    advancedInputs.forEach(input => {
+        if (input) {
+            input.disabled = !isPro;
+            input.style.opacity = isPro ? '1' : '0.5';
+            input.style.pointerEvents = isPro ? 'auto' : 'none';
+            input.style.cursor = isPro ? 'text' : 'not-allowed';
+        }
+    });
+
+    // S'assurer que les selects ont le bon curseur
+    const advancedSelects = [
+        document.getElementById('captionLength'),
+        document.getElementById('captionStyle')
+    ];
+    advancedSelects.forEach(select => {
+        if (select) {
+            select.style.cursor = isPro ? 'pointer' : 'not-allowed';
+        }
+    });
 
     // Permettre l'upload d'images
     if (elements.uploadArea) {
@@ -553,6 +585,33 @@ function setupEventListeners() {
         elements.newPostBtn.addEventListener('click', resetApp);
     }
 
+    // Ouvrir Instagram (copie + ouvre le site)
+    const openInstaBtn = document.getElementById('openInstaBtn');
+    if (openInstaBtn) {
+        openInstaBtn.addEventListener('click', async () => {
+            // Copier le contenu
+            const caption = elements.generatedCaption?.value || '';
+            const hashtags = Array.from(elements.hashtagsContainer?.children || [])
+                .map(span => span.textContent)
+                .join(' ');
+
+            const fullText = `${caption}\n\n${hashtags}`;
+
+            try {
+                await navigator.clipboard.writeText(fullText);
+                showNotification('Contenu copié ! Instagram s\'ouvre...', 'success');
+
+                // Ouvrir Instagram dans un nouvel onglet
+                setTimeout(() => {
+                    window.open('https://www.instagram.com/', '_blank');
+                }, 500);
+            } catch (error) {
+                console.error('Erreur copie:', error);
+                showNotification('Erreur lors de la copie', 'error');
+            }
+        });
+    }
+
     // =============================================================================
     // BOUTONS UPGRADE PRO
     // =============================================================================
@@ -584,8 +643,11 @@ function setupEventListeners() {
     const collapseIcon = advancedHeader?.querySelector('.collapse-icon');
 
     if (advancedHeader && advancedContent) {
-        // Par défaut, afficher ouvert pour les utilisateurs Pro
-        if (AppState.auth.user?.plan === 'pro') {
+        // Par défaut, afficher ouvert pour les utilisateurs Pro (comparaison insensible à la casse)
+        const userPlan = (AppState.auth.user?.plan || 'free').toLowerCase();
+        const isPro = userPlan === 'pro';
+
+        if (isPro) {
             advancedContent.classList.remove('collapsed');
             collapseIcon?.classList.remove('collapsed');
         } else {

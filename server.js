@@ -1570,6 +1570,149 @@ app.get('/privacy', (req, res) => {
 });
 
 // =============================================================================
+// PAGE SUPPORT
+// =============================================================================
+
+app.get('/support', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Support - Perfect Insta Post</title>
+            <style>
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                }
+                .container {
+                    background: white;
+                    padding: 40px;
+                    border-radius: 16px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                    text-align: center;
+                }
+                .logo {
+                    font-size: 48px;
+                    margin-bottom: 10px;
+                }
+                h1 {
+                    color: #2c3e50;
+                    margin-bottom: 10px;
+                }
+                .subtitle {
+                    color: #7f8c8d;
+                    margin-bottom: 30px;
+                }
+                .contact-card {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 25px;
+                    border-radius: 12px;
+                    margin: 20px 0;
+                }
+                .contact-card h2 {
+                    margin: 0 0 15px 0;
+                    font-size: 18px;
+                }
+                .email-link {
+                    display: inline-block;
+                    background: white;
+                    color: #667eea;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    font-weight: 600;
+                    margin-top: 10px;
+                    transition: transform 0.2s;
+                }
+                .email-link:hover {
+                    transform: scale(1.05);
+                }
+                .faq {
+                    text-align: left;
+                    margin-top: 30px;
+                    padding-top: 20px;
+                    border-top: 1px solid #eee;
+                }
+                .faq h3 {
+                    color: #2c3e50;
+                    margin-bottom: 15px;
+                }
+                .faq-item {
+                    margin-bottom: 15px;
+                    padding: 15px;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                }
+                .faq-item strong {
+                    color: #667eea;
+                }
+                .response-time {
+                    background: #e8f5e9;
+                    color: #2e7d32;
+                    padding: 10px 15px;
+                    border-radius: 8px;
+                    margin-top: 20px;
+                    font-size: 14px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="logo">📸</div>
+                <h1>Perfect Insta Post</h1>
+                <p class="subtitle">Support & Assistance</p>
+
+                <div class="contact-card">
+                    <h2>📧 Besoin d'aide ?</h2>
+                    <p>Notre équipe est là pour vous aider</p>
+                    <a href="mailto:cyril.paquier@gmail.com" class="email-link">
+                        cyril.paquier@gmail.com
+                    </a>
+                </div>
+
+                <div class="response-time">
+                    ⚡ Temps de réponse moyen : 24-48 heures
+                </div>
+
+                <div class="faq">
+                    <h3>Questions fréquentes</h3>
+
+                    <div class="faq-item">
+                        <strong>Comment fonctionne Perfect Insta Post ?</strong>
+                        <p>Uploadez votre photo, l'IA analyse l'image et génère automatiquement une légende optimisée et des hashtags stratégiques.</p>
+                    </div>
+
+                    <div class="faq-item">
+                        <strong>Combien de posts puis-je générer ?</strong>
+                        <p>Plan Free : 5 posts/mois. Plan Pro : 50 posts/mois avec options avancées.</p>
+                    </div>
+
+                    <div class="faq-item">
+                        <strong>Mes photos sont-elles stockées ?</strong>
+                        <p>Non, vos images sont analysées en temps réel et ne sont jamais stockées sur nos serveurs.</p>
+                    </div>
+
+                    <div class="faq-item">
+                        <strong>Comment annuler mon abonnement Pro ?</strong>
+                        <p>Contactez-nous par email et nous traiterons votre demande sous 24h.</p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+});
+
+// =============================================================================
 // DÉMARRAGE SERVEUR
 // =============================================================================
 
